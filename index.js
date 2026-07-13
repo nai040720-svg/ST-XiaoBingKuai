@@ -94,25 +94,12 @@ jQuery(() => {
     const settings = getSettings();
 
     $('#xiaobingkuai_enable').prop('checked', settings.enabled);
-    $('#xiaobingkuai_sync_password').val(settings.syncPassword || '');
-
     $('#extensions_settings').on('click', '#xiaobingkuai_enable', function () {
         settings.enabled = !!$(this).prop('checked');
         saveSettings();
 
         if (settings.enabled) loadFloatingWindow();
         else unloadFloatingWindow();
-    });
-
-    $('#extensions_settings').on('click', '#xiaobingkuai_save_sync_password', function () {
-        settings.syncPassword = String($('#xiaobingkuai_sync_password').val() || '').trim();
-        saveSettings();
-
-        if (settings.syncPassword) {
-            toastr?.success?.('同步密码已保存');
-        } else {
-            toastr?.warning?.('同步密码已清空，一键同步将被锁定');
-        }
     });
 
     $('#extensions_settings').on('click', '#xiaobingkuai_sync_preset', function () {

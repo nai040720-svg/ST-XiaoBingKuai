@@ -21,13 +21,6 @@ export function createSettingsPanelHtml() {
                 <span><b>启用悬浮窗</b></span>
             </label>
 
-            <div class="flex-container" style="gap:6px; align-items:center; margin-bottom:8px;">
-                <input class="text_pole flex1" type="password" id="xiaobingkuai_sync_password" placeholder="设置同步密码" autocomplete="new-password">
-                <div class="menu_button" id="xiaobingkuai_save_sync_password" style="cursor:pointer;">
-                    <small>保存</small>
-                </div>
-            </div>
-
             <hr>
 
             <div class="flex-container" style="gap:6px;">

@@ -131,7 +131,7 @@ export default function initFloatingWindow(bridge) {
             .join("\n");
         }
         try {
-          const vars = getVariables({ type: "global" }) || {};
+          const vars = (typeof getVariables === "function") ? (getVariables({ type: "global" }) || {}) : {};
           const r = vars.orbV6_prismfox_pos || vars.orbV5_prismfox_pos;
           if (r) {
             const saved = JSON.parse(r);

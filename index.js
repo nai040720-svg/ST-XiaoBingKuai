@@ -27,7 +27,7 @@ const MODULE_NAME = '小冰块悬浮窗';
 const ID = 'th-orb-v6-custom';
 const LOG_PREFIX = '[小冰块悬浮窗]';
 
-const defaultSettings = { enabled: true };
+const defaultSettings = { enabled: true, syncPassword: '' };
 
 function getSettings() {
     if (!extension_settings[MODULE_NAME]) extension_settings[MODULE_NAME] = {};
@@ -94,6 +94,7 @@ jQuery(() => {
     const settings = getSettings();
 
     $('#xiaobingkuai_enable').prop('checked', settings.enabled);
+    $('#xiaobingkuai_sync_password').val(settings.syncPassword || '');
 
     $('#extensions_settings').on('click', '#xiaobingkuai_enable', function () {
         settings.enabled = !!$(this).prop('checked');
@@ -103,7 +104,31 @@ jQuery(() => {
         else unloadFloatingWindow();
     });
 
+    $('#extensions_settings').on('click', '#xiaobingkuai_save_sync_password', function () {
+        settings.syncPassword = String($('#xiaobingkuai_sync_password').val() || '').trim();
+        saveSettings();
+
+        if (settings.syncPassword) {
+            toastr?.success?.('同步密码已保存');
+        } else {
+            toastr?.warning?.('同步密码已清空，一键同步将被锁定');
+        }
+    });
+
     $('#extensions_settings').on('click', '#xiaobingkuai_sync_preset', function () {
+        const password = String(settings.syncPassword || '').trim();
+        if (!password) {
+            toastr?.warning?.('请先设置并保存同步密码');
+            return;
+        }
+
+        const input = prompt('请输入同步密码');
+        if (input === null) return;
+        if (String(input).trim() !== password) {
+            toastr?.error?.('同步密码错误');
+            return;
+        }
+
         settings.enabled = true;
         $('#xiaobingkuai_enable').prop('checked', true);
         saveSettings();

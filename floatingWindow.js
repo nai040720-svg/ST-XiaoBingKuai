@@ -3854,7 +3854,6 @@ export default function initFloatingWindow(bridge) {
           pdoc.getElementById(ID)?.remove();
           pdoc.getElementById(`${ID}-style`)?.remove();
         });
-      }),
 
   } catch (err) {
     console.error('[小冰块悬浮窗] 初始化失败:', err);

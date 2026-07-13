@@ -3,7 +3,7 @@
 // 预设条目操作桥接层 —— 直接通过 ST 内部 API 操作，不碰前端 DOM
 // ============================================================
 
-import { promptManager, oai_settings } from '../../../openai.js';
+import { promptManager } from '../../../openai.js';
 import { saveSettings, eventSource, event_types } from '../../../../script.js';
 
 // ── 获取当前角色ID ──────────────────────────────────────────

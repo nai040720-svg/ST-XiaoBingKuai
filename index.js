@@ -36,6 +36,7 @@ let suppressNextClick = false;
 let settingsMountAttempts = 0;
 
 function boot() {
+    removeExistingUi();
     injectStyle();
     mountSettingsPanel();
     if (isFloatingEnabled()) {
@@ -53,7 +54,6 @@ function ensurePanel() {
 }
 
 function createPanel() {
-    if (document.getElementById(ROOT_ID)) return;
     root = document.createElement('div');
     root.id = ROOT_ID;
     root.innerHTML = `
@@ -106,7 +106,6 @@ function createPanel() {
 }
 
 function mountSettingsPanel() {
-    if (document.getElementById(SETTINGS_ID)) return;
     const host = document.querySelector('#extensions_settings')
         || document.querySelector('#extensions_settings2')
         || document.querySelector('#extensions-settings')
@@ -146,6 +145,17 @@ function mountSettingsPanel() {
     checkbox.addEventListener('change', () => {
         setFloatingEnabled(checkbox.checked);
     });
+}
+
+function removeExistingUi() {
+    document.getElementById(ROOT_ID)?.remove();
+    document.getElementById(SETTINGS_ID)?.remove();
+    document.getElementById(STYLE_ID)?.remove();
+    root = null;
+    searchInput = null;
+    listNode = null;
+    statsNode = null;
+    emptyNode = null;
 }
 
 function bindPanelEvents() {
@@ -421,8 +431,10 @@ function setOpen(open) {
 function applySavedPosition() {
     const position = loadJson(STORAGE.position, null);
     if (!position || typeof position.left !== 'number' || typeof position.top !== 'number') return;
-    root.style.left = `${position.left}px`;
-    root.style.top = `${position.top}px`;
+    const left = clamp(position.left, 8, Math.max(8, window.innerWidth - 58));
+    const top = clamp(position.top, 8, Math.max(8, window.innerHeight - 58));
+    root.style.left = `${left}px`;
+    root.style.top = `${top}px`;
     root.style.right = 'auto';
     root.style.bottom = 'auto';
 }

@@ -82,6 +82,10 @@ const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-4
 const ALL_CLAUDE_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","a2a49518-7d3c-48de-87d2-ce796919241f","ad54cb24-1995-43ac-aaff-f6a681c781e7","17441f2f-0d3a-43f4-86e2-a77ed03b131f","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a"];
 const ALL_GEMINI_IDS = ["61c5dabf-c028-4588-a243-83e3403ae029","eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","7f764474-282b-401f-9765-ca794d6a8238","c8d921de-b2f0-4e1a-8226-ee4d1e686340","5dcb9682-d276-4093-b599-e305a239edf3","61dd05b5-f310-4d84-8419-377214b8c4df","c1160d81-e5e6-4e8b-a405-108dc17f3b75","15b6968a-a2a2-46e9-953c-4a13cf806e86","b5890d19-f6ef-4880-84b1-71188652f982","07832187-b2d4-4aa8-b135-9194ba17f70c","cc8ded6e-4eb9-4c49-b0ed-59ab8eb02e1a","8557e79e-6267-4cfc-a599-730eec400e10","252ec317-ca51-4bcc-bd3d-9b0e5e167a4e","8493af05-e821-4465-98ac-60861a30dc34","8c01ffc1-4839-48bb-aa8e-fd6e45822304","a7d5e545-a841-4b3f-8dc6-9f0061203035","23a2bd10-918d-4133-ace0-5bb15aeacbc4","8f3fd14d-eace-4910-a748-b13a1be7b968","85a64d71-8741-40bd-967b-5b7cec3c3df8","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d"];
 
+// NSFW互斥：防止发情开启时，关闭同组其他所有NSFW条目
+const NSFW_SUPPRESS_ID = 'caeb7072-ecbc-41f8-9c44-bb8f8144adae';
+const NSFW_SECTION_IDS = ["43f2c0f5-2b2d-48d1-8acb-dc7a0a39bc6a","c85c7498-2c03-4362-a42f-27d580b79d7c","caeb7072-ecbc-41f8-9c44-bb8f8144adae","73201149-35f6-40f2-bf21-4ae3b4d10836","16578df1-bbc5-4b91-ad63-43e0afa0ef66","f1518297-09c4-4525-90bf-57f8cac22ed3","8fea0443-3261-4b64-b97d-d14a6a7580d9","afe37b3a-5425-4245-82cb-b00626fe4f7a","d632d197-d7f0-4394-8d56-5f4977553193","a054e69a-a003-4edb-b864-5c3eaa0b1f65","80267a45-c682-47da-a6db-42e0d100eed0","908e1ac7-0109-4285-be74-d2d26cc61084","2a0269c0-ec24-4ffc-b65b-9c2cc1229e9b","44497e10-9bd1-4c45-889d-3b61c30ed397","e2bdb2a8-3da5-4521-a5c7-acf768fd2ea7","8f1bd137-1f5c-4d99-b74a-98b3f14bc1e1","15f9bd3f-6113-4172-9fa6-2d019dad8e48","4b97f561-261d-4494-a7c6-1b62303d67d6","5d2b0492-3768-4157-abb9-86397118ec3a","bc77e729-01cd-4358-b435-2cfbe1c23709","14a7b0c1-60f7-4144-bd2c-352ef484c474","cd04bbfb-9487-4ef8-b984-0d3e89b42045","5885d2be-1c87-4506-97ad-3179d6d7f661","9de31d39-0486-4e26-961a-3c1a7a8e3d51","3ac84212-0653-4617-be8e-b09b9f9d6338","12aa0943-f034-44e5-8a9d-c5b3ebf4b490","a00370f3-0108-4f0a-8452-abad70d4e42c","65bdaaa9-79a1-44b3-afc9-4f2bb65759d6","29a95af4-11cc-48de-91ea-f035e28d1f12","a4ae4fc9-7d47-4a4d-a2ac-3f9f5f271b09","0a4e15b7-40ed-4260-834c-e06b70558e10","e5364f02-c6f8-4494-b419-a3463cd882d3","0b8b590e-57db-416e-999f-89add143c818","3ea350ce-4107-46d9-b280-bf548162a135","3aa26b1b-ed87-4cfd-8ea2-22c3e6f86c2d","44f10d57-a3a4-44a0-8d02-4b9deb3f1eeb","9e8895c4-533b-4ff3-b55c-e641f612de58","ab1c0395-21b9-4bd5-a7d8-0ee7ef9eeab7","c4018614-f345-4b79-a379-4a5f27ae34bb","e4ca443b-6d6d-48f3-b555-d75bbe72dbee","04dc82a8-fe25-4548-ad8e-c39c6f002d4a","075abfc8-b1d1-448b-b467-6ead207f17fd","3b13929c-817f-4c41-a36c-d89aeb1d6a03"];
+
 let root;
 let orb;
 let menu;
@@ -189,7 +193,10 @@ function createPanel() {
 
     bindPanelEvents();
     enableDragging();
-    refreshPanel();
+    renderList(); // 只在创建时渲染一次
+    promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
+    syncButtonStates();
+    syncAllOnButtons();
 }
 
 // ── 渲染列表 ──────────────────────────────────────────────────
@@ -292,7 +299,11 @@ function handleClaudeAllOn() {
             if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(id, false);
         });
     }
-    setTimeout(function() { refreshPanel(); }, 100);
+    setTimeout(function() {
+        promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
+        syncButtonStates();
+        syncAllOnButtons();
+    }, 120);
 }
 
 function handleGeminiAllOn() {
@@ -313,13 +324,16 @@ function handleGeminiAllOn() {
             if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(id, false);
         });
     }
-    setTimeout(function() { refreshPanel(); }, 100);
+    setTimeout(function() {
+        promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
+        syncButtonStates();
+        syncAllOnButtons();
+    }, 120);
 }
 
-// ── 状态同步 ──────────────────────────────────────────────────
+// ── 状态同步（不重新渲染，只更新CSS类） ──────────────────────
 function refreshPanel() {
     promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
-    renderList();
     syncButtonStates();
     syncAllOnButtons();
 }
@@ -419,7 +433,20 @@ function bindPanelEvents() {
             return;
         }
         btn.classList.toggle('is-on');
-        setTimeout(refreshPanel, 80);
+        var newEnabled = btn.classList.contains('is-on');
+        promptStateMap.set(id, newEnabled);
+        // nsfw-suppress互斥：防止发情开启时，关闭同组其他所有NSFW条目
+        if (id === NSFW_SUPPRESS_ID && newEnabled) {
+            NSFW_SECTION_IDS.forEach(function(nsid) {
+                if (nsid !== NSFW_SUPPRESS_ID) {
+                    setPromptEnabled(nsid, false);
+                    promptStateMap.set(nsid, false);
+                    var nsfwBtn = root.querySelector('.menu-item-toggle[data-identifier="' + nsid + '"]');
+                    if (nsfwBtn) nsfwBtn.classList.remove('is-on');
+                }
+            });
+        }
+        syncAllOnButtons();
     });
 }
 
@@ -448,7 +475,7 @@ function applyFloatingEnabled(enabled) {
     if (!root) return;
     root.style.display = enabled ? '' : 'none';
     if (!enabled) closeMenu();
-    if (enabled) refreshPanel();
+    if (enabled) { syncButtonStates(); syncAllOnButtons(); }
 }
 
 // ── 面板开关 ──────────────────────────────────────────────────
@@ -461,7 +488,10 @@ function openMenu() {
     if (!root) return;
     updateMenuDirection();
     root.classList.add(CLASS.open);
-    refreshPanel();
+    // 只同步状态，不重新渲染（避免分组关闭和卡顿）
+    promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
+    syncButtonStates();
+    syncAllOnButtons();
     setTimeout(function() {
         root.querySelectorAll('.cat-list details').forEach(function(d) { d.open = true; });
     }, 80);

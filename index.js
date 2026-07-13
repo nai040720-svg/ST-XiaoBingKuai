@@ -1,5 +1,6 @@
 // ============================================================
 // ST-XiaoBingKuai floating preset panel
+// 排版与交互参照预设内置悬浮窗（th-orb-v6-custom）
 // ============================================================
 
 import {
@@ -14,28 +15,25 @@ const STYLE_ID = 'xbk-floating-panel-style';
 const SETTINGS_ID = 'xbk-extension-settings';
 const STORAGE = {
     enabled: 'xbkFloatingPanel.enabled',
-    open: 'xbkFloatingPanel.open',
     position: 'xbkFloatingPanel.position',
-    collapsedGroups: 'xbkFloatingPanel.collapsedGroups',
 };
 
 const CLASS = {
     disabled: 'xbk-disabled',
-    open: 'xbk-open',
-    dragging: 'xbk-dragging',
+    open: 'open',
+    openUp: 'open-up',
 };
 
 let root;
-let searchInput;
-let listNode;
-let statsNode;
-let emptyNode;
-let activeFilter = 'all';
-let promptStateMap = new Map();
-let collapsedGroups = loadJson(STORAGE.collapsedGroups, {});
-let suppressNextClick = false;
+let orb;
+let menu;
+let shell;
 let settingsMountAttempts = 0;
+let promptStateMap = new Map();
+let activeCat = 0;
+let dragState = null;
 
+// ── 启动 ──────────────────────────────────────────────────────
 function boot() {
     try {
         console.log('[小冰块扩展] boot() 开始执行');
@@ -54,60 +52,66 @@ function boot() {
     }
 }
 
+// ── 创建面板 ──────────────────────────────────────────────────
 function createPanel() {
     root = document.createElement('div');
     root.id = ROOT_ID;
+
+    const pos = loadJson(STORAGE.position, null);
+    const isMobile = window.innerWidth <= 768;
+    let x = isMobile ? window.innerWidth - 60 : 40;
+    let y = isMobile ? window.innerHeight - 120 : 160;
+    if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
+        x = clamp(pos.x, 4, Math.max(4, window.innerWidth - 52));
+        y = clamp(pos.y, 4, Math.max(4, window.innerHeight - 52));
+    }
+    root.style.left = `${x}px`;
+    root.style.top = `${y}px`;
+
     root.innerHTML = `
-        <div class="xbk-overlay" data-action="close"></div>
-        <section class="xbk-shell" aria-label="小冰块预设悬浮窗">
-            <button class="xbk-fab" type="button" data-action="toggle" title="小冰块预设面板">
-                <span class="xbk-fab-icon">❄</span>
-            </button>
-            <div class="xbk-card" role="dialog" aria-modal="false" aria-label="小冰块预设面板">
-                <header class="xbk-header">
-                    <button class="xbk-drag-handle" type="button" title="拖动面板">⋮⋮</button>
-                    <div class="xbk-title-block">
-                        <div class="xbk-title">小冰块</div>
-                        <div class="xbk-subtitle">Preset Switchboard</div>
+        <div class="orb" id="${ROOT_ID}-orb">
+            <svg class="orb-icon" viewBox="0 0 48 48" width="28" height="28">
+                <text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>
+            </svg>
+        </div>
+        <div class="menu" id="${ROOT_ID}-menu">
+            <div class="menu-shell bg-dark" id="${ROOT_ID}-shell">
+                <div class="menu-head" id="${ROOT_ID}-head">
+                    <svg viewBox="0 0 48 48" width="16" height="16">
+                        <text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>
+                    </svg>
+                    <div class="menu-title-wrap">
+                        <div class="menu-title">小冰块V3.32双适配版</div>
                     </div>
-                    <button class="xbk-icon-btn" type="button" data-action="refresh" title="刷新状态">↻</button>
-                    <button class="xbk-icon-btn" type="button" data-action="close" title="收起">×</button>
-                </header>
-                <div class="xbk-toolbar">
-                    <label class="xbk-search-wrap">
-                        <span>⌕</span>
-                        <input class="xbk-search" type="search" placeholder="搜索条目 / 分组" autocomplete="off" />
-                    </label>
-                    <div class="xbk-filters" aria-label="筛选">
-                        <button class="xbk-filter is-active" type="button" data-filter="all">全部</button>
-                        <button class="xbk-filter" type="button" data-filter="on">已开</button>
-                        <button class="xbk-filter" type="button" data-filter="off">已关</button>
-                    </div>
+                    <button class="menu-close" id="${ROOT_ID}-close">✕</button>
                 </div>
-                <div class="xbk-stats"></div>
-                <div class="xbk-list" role="list"></div>
-                <div class="xbk-empty" hidden>没有匹配的预设条目</div>
+                <div class="category-tabs" id="${ROOT_ID}-tabs">
+                    <div class="category-tab cat-0 active" data-cat="0">通用</div>
+                    <div class="category-tab cat-1" data-cat="1">Claude</div>
+                    <div class="category-tab cat-2" data-cat="2">Gemini</div>
+                </div>
+                <div class="menu-list" id="${ROOT_ID}-list"></div>
+                <div class="menu-foot">
+                    <span>小冰块V3.32</span>
+                    <span class="fox-link">[ ɪᴄᴇ//ᴄᴜʙᴇ ]</span>
+                </div>
             </div>
-        </section>
+        </div>
     `;
 
     document.body.appendChild(root);
-    console.log('[小冰块扩展] 面板已插入 DOM, root.id=' + root.id + ', body存在=' + !!document.body);
-    searchInput = root.querySelector('.xbk-search');
-    listNode = root.querySelector('.xbk-list');
-    statsNode = root.querySelector('.xbk-stats');
-    emptyNode = root.querySelector('.xbk-empty');
+    console.log('[小冰块扩展] 面板已插入 DOM, root.id=' + root.id);
 
-    if (localStorage.getItem(STORAGE.open) === 'true') {
-        root.classList.add(CLASS.open);
-    }
+    orb = root.querySelector(`#${ROOT_ID}-orb`);
+    menu = root.querySelector(`#${ROOT_ID}-menu`);
+    shell = root.querySelector(`#${ROOT_ID}-shell`);
 
-    applySavedPosition();
     bindPanelEvents();
     enableDragging();
     refreshPanel();
 }
 
+// ── 设置面板 ──────────────────────────────────────────────────
 function mountSettingsPanel() {
     const host = document.querySelector('#extensions_settings')
         || document.querySelector('#extensions_settings2')
@@ -124,7 +128,7 @@ function mountSettingsPanel() {
         }
         return;
     }
-    console.log('[小冰块扩展] 设置面板挂载点: ' + host.id || host.className);
+    console.log('[小冰块扩展] 设置面板挂载点: ' + (host.id || host.className));
 
     const panel = document.createElement('div');
     panel.id = SETTINGS_ID;
@@ -154,80 +158,67 @@ function mountSettingsPanel() {
         console.log('[小冰块扩展] 用户切换悬浮窗: ' + (checkbox.checked ? '开启' : '关闭') + ', root存在=' + !!root);
         if (checkbox.checked && root) {
             const rect = root.getBoundingClientRect();
-            console.log('[小冰块扩展] 悬浮按钮位置: left=' + Math.round(rect.left) + ' top=' + Math.round(rect.top) + ' w=' + Math.round(rect.width) + ' h=' + Math.round(rect.height));
+            console.log('[小冰块扩展] 悬浮按钮位置: left=' + Math.round(rect.left) + ' top=' + Math.round(rect.top));
             if (window.toastr?.info) {
-                window.toastr.info('悬浮窗已开启，❄按钮在屏幕左下角', '小冰块扩展');
+                window.toastr.info('悬浮窗已开启，❄按钮在屏幕' + Math.round(rect.left) + ',' + Math.round(rect.top) + '处', '小冰块扩展');
             }
         }
     });
 }
 
+// ── 清理 ──────────────────────────────────────────────────────
 function removeExistingUi() {
     document.getElementById(ROOT_ID)?.remove();
     document.getElementById(SETTINGS_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
     root = null;
-    searchInput = null;
-    listNode = null;
-    statsNode = null;
-    emptyNode = null;
+    orb = null;
+    menu = null;
+    shell = null;
 }
 
+// ── 事件绑定 ──────────────────────────────────────────────────
 function bindPanelEvents() {
-    root.addEventListener('click', (event) => {
-        if (suppressNextClick) {
-            suppressNextClick = false;
-            event.preventDefault();
-            event.stopPropagation();
+    const btnClose = root.querySelector(`#${ROOT_ID}-close`);
+    btnClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMenu();
+    });
+
+    const tabs = root.querySelector(`#${ROOT_ID}-tabs`);
+    tabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.category-tab');
+        if (!tab) return;
+        activeCat = Number(tab.dataset.cat);
+        tabs.querySelectorAll('.category-tab').forEach(t => {
+            t.classList.toggle('active', t === tab);
+        });
+        renderList();
+    });
+
+    root.addEventListener('click', (e) => {
+        const btn = e.target.closest('.menu-item-toggle');
+        if (!btn) return;
+        const id = btn.dataset.identifier;
+        if (!id) return;
+        const ok = togglePrompt(id);
+        if (!ok) {
+            if (window.toastr?.warning) window.toastr.warning('没有找到这个预设条目');
             return;
         }
-
-        const actionButton = event.target.closest('[data-action]');
-        if (!actionButton) return;
-        const action = actionButton.dataset.action;
-        if (action === 'toggle') toggleOpen();
-        if (action === 'close') setOpen(false);
-        if (action === 'refresh') refreshPanel();
+        btn.classList.toggle('is-on');
+        setTimeout(refreshPanel, 80);
     });
-
-    root.addEventListener('click', (event) => {
-        const filter = event.target.closest('[data-filter]');
-        if (!filter) return;
-        activeFilter = filter.dataset.filter || 'all';
-        root.querySelectorAll('.xbk-filter').forEach(button => {
-            button.classList.toggle('is-active', button === filter);
-        });
-        render();
-    });
-
-    root.addEventListener('click', (event) => {
-        const toggle = event.target.closest('.xbk-toggle');
-        if (!toggle) return;
-        const id = toggle.dataset.identifier;
-        if (!id || toggle.dataset.pending === 'true') return;
-        toggle.dataset.pending = 'true';
-        const ok = togglePrompt(id);
-        if (!ok) showToast('没有找到这个预设条目');
-        setTimeout(refreshPanel, ok ? 80 : 0);
-    });
-
-    root.addEventListener('toggle', (event) => {
-        const details = event.target.closest('.xbk-group');
-        if (!details) return;
-        collapsedGroups[details.dataset.groupKey] = !details.open;
-        localStorage.setItem(STORAGE.collapsedGroups, JSON.stringify(collapsedGroups));
-    }, true);
-
-    searchInput.addEventListener('input', render);
 }
 
 function bindPromptUpdates() {
     onPromptStateChanged((states) => {
         promptStateMap = new Map(states.map(item => [item.identifier, item.enabled]));
-        render();
+        syncButtonStates();
     });
 }
 
+// ── 开关控制 ──────────────────────────────────────────────────
 function isFloatingEnabled() {
     return localStorage.getItem(STORAGE.enabled) !== 'false';
 }
@@ -237,68 +228,221 @@ function setFloatingEnabled(enabled) {
     const checkbox = document.querySelector('#xbk-enable-floating');
     if (checkbox) checkbox.checked = enabled;
     applyFloatingEnabled(enabled);
-    if (enabled) setOpen(true);
+    if (enabled) openMenu();
 }
 
 function applyFloatingEnabled(enabled) {
     if (!root) return;
-    root.classList.toggle(CLASS.disabled, !enabled);
-    if (!enabled) setOpen(false);
+    root.style.display = enabled ? '' : 'none';
+    if (!enabled) closeMenu();
     if (enabled) refreshPanel();
 }
 
-function refreshPanel() {
-    promptStateMap = new Map(getAllPromptStates().map(item => [item.identifier, item.enabled]));
-    render();
+// ── 面板开关 ──────────────────────────────────────────────────
+function toggleMenu() {
+    if (root.classList.contains(CLASS.open)) {
+        closeMenu();
+    } else {
+        openMenu();
+    }
 }
 
-function render() {
-    if (!listNode) return;
+function openMenu() {
+    if (!root) return;
+    updateMenuDirection();
+    root.classList.add(CLASS.open);
+    refreshPanel();
+    setTimeout(() => {
+        root.querySelectorAll('.cat-list details').forEach(d => { d.open = true; });
+    }, 80);
+}
 
-    const query = normalize(searchInput.value);
-    const groups = buildGroups().map(group => ({
-        ...group,
-        items: group.items.filter(item => itemMatches(item, group.title, query, activeFilter)),
-    })).filter(group => group.items.length > 0);
+function closeMenu() {
+    if (!root) return;
+    root.classList.remove(CLASS.open);
+    root.classList.remove(CLASS.openUp);
+}
 
-    const allItems = groups.flatMap(group => group.items);
-    const enabledCount = allItems.filter(item => item.enabled).length;
-    statsNode.textContent = `${enabledCount}/${allItems.length} 已开启`;
-    listNode.innerHTML = groups.map(renderGroup).join('');
-    emptyNode.hidden = groups.length > 0;
+function updateMenuDirection() {
+    const orbX = parseInt(root.style.left, 10) || 0;
+    const orbY = parseInt(root.style.top, 10) || 0;
+    const menuH = 480;
+    if (orbX < window.innerWidth / 2) {
+        menu.style.left = '0';
+        menu.style.right = 'auto';
+    } else {
+        menu.style.left = 'auto';
+        menu.style.right = '0';
+    }
+    const spaceBelow = window.innerHeight - orbY - 60;
+    if (spaceBelow < menuH && orbY > menuH / 2) {
+        menu.style.top = 'auto';
+        menu.style.bottom = '52px';
+        root.classList.add(CLASS.openUp);
+        menu.style.transformOrigin = orbX < window.innerWidth / 2 ? 'bottom left' : 'bottom right';
+    } else {
+        menu.style.top = '52px';
+        menu.style.bottom = 'auto';
+        root.classList.remove(CLASS.openUp);
+        menu.style.transformOrigin = orbX < window.innerWidth / 2 ? 'top left' : 'top right';
+    }
+}
+
+// ── 拖拽 ──────────────────────────────────────────────────────
+function enableDragging() {
+    const head = root.querySelector(`#${ROOT_ID}-head`);
+    const DRAG_THRESHOLD = 4;
+    let dragMask = null;
+
+    function createMask() {
+        dragMask?.remove();
+        dragMask = document.createElement('div');
+        dragMask.id = `${ROOT_ID}-drag-mask`;
+        dragMask.style.cssText = 'position:fixed;inset:0;z-index:2147483639;cursor:grabbing;background:transparent;';
+        document.body.appendChild(dragMask);
+    }
+    function removeMask() {
+        dragMask?.remove();
+        dragMask = null;
+    }
+
+    function startDrag(cx, cy) {
+        dragState = { moved: false, sx: cx, sy: cy };
+        const rect = root.getBoundingClientRect();
+        dragState.ox = cx - rect.left;
+        dragState.oy = cy - rect.top;
+        root.style.transition = 'none';
+        createMask();
+    }
+    function moveDrag(cx, cy) {
+        if (!dragState) return;
+        if (!dragState.moved && Math.abs(cx - dragState.sx) < DRAG_THRESHOLD && Math.abs(cy - dragState.sy) < DRAG_THRESHOLD) return;
+        dragState.moved = true;
+        root.style.left = `${Math.max(4, Math.min(cx - dragState.ox, window.innerWidth - 50))}px`;
+        root.style.top = `${Math.max(4, Math.min(cy - dragState.oy, window.innerHeight - 50))}px`;
+    }
+    function endDrag() {
+        if (!dragState) return;
+        root.style.transition = '';
+        removeMask();
+        if (dragState.moved) savePos();
+        dragState = null;
+    }
+
+    function isInteractive(e) {
+        return e.target.id === `${ROOT_ID}-close`
+            || e.target.classList.contains('menu-item-toggle')
+            || e.target.closest('.menu-item-toggle')
+            || e.target.closest('.category-tab');
+    }
+
+    orb.addEventListener('mousedown', (e) => {
+        startDrag(e.clientX, e.clientY);
+        e.preventDefault();
+    });
+    head.addEventListener('mousedown', (e) => {
+        if (isInteractive(e)) return;
+        startDrag(e.clientX, e.clientY);
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+    document.addEventListener('mouseup', endDrag);
+
+    orb.addEventListener('click', () => {
+        if (dragState && dragState.moved) return;
+        toggleMenu();
+    });
+
+    orb.addEventListener('touchstart', (e) => {
+        startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        e.stopPropagation();
+    }, { passive: true });
+    orb.addEventListener('touchmove', (e) => {
+        if (!dragState) return;
+        moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    orb.addEventListener('touchend', (e) => {
+        const wasMoved = dragState?.moved;
+        endDrag();
+        if (!wasMoved) toggleMenu();
+        e.stopPropagation();
+        e.preventDefault();
+    }, { passive: false });
+
+    head.addEventListener('touchstart', (e) => {
+        if (isInteractive(e)) return;
+        startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        e.stopPropagation();
+    }, { passive: true });
+    head.addEventListener('touchmove', (e) => {
+        if (!dragState) return;
+        moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    head.addEventListener('touchend', (e) => {
+        endDrag();
+        e.stopPropagation();
+    }, { passive: false });
+}
+
+function savePos() {
+    const x = parseInt(root.style.left, 10) || 0;
+    const y = parseInt(root.style.top, 10) || 0;
+    localStorage.setItem(STORAGE.position, JSON.stringify({ x, y }));
+}
+
+// ── 数据读取与分组 ────────────────────────────────────────────
+function refreshPanel() {
+    promptStateMap = new Map(getAllPromptStates().map(item => [item.identifier, item.enabled]));
+    renderList();
+}
+
+function syncButtonStates() {
+    root.querySelectorAll('.menu-item-toggle[data-identifier]').forEach(btn => {
+        const id = btn.dataset.identifier;
+        const on = promptStateMap.has(id) ? promptStateMap.get(id) : false;
+        btn.classList.toggle('is-on', on);
+    });
+}
+
+function renderList() {
+    const listEl = root.querySelector(`#${ROOT_ID}-list`);
+    if (!listEl) return;
+
+    const groups = buildGroups();
+    const cats = [[], [], []];
+    for (const group of groups) {
+        const cat = group.cat;
+        if (cats[cat]) cats[cat].push(group);
+    }
+
+    listEl.innerHTML = cats.map((catGroups, i) => {
+        const display = i === activeCat ? '' : ' style="display:none;"';
+        const detailsHtml = catGroups.map(renderGroup).join('');
+        return `<div class="cat-list cat-list-${i}" data-cat="${i}"${display}>${detailsHtml}</div>`;
+    }).join('');
 }
 
 function renderGroup(group) {
-    const enabledCount = group.items.filter(item => item.enabled).length;
-    const groupKey = escapeHtml(group.key);
-    const title = escapeHtml(cleanTitle(group.title));
-    const open = collapsedGroups[group.key] ? '' : ' open';
     const buttons = group.items.map(renderToggle).join('');
-
     return `
-        <details class="xbk-group" data-group-key="${groupKey}"${open}>
-            <summary>
-                <span class="xbk-group-title">${title}</span>
-                <span class="xbk-group-count">${enabledCount}/${group.items.length}</span>
-            </summary>
-            <div class="xbk-grid" role="list">
-                ${buttons}
+        <details open>
+            <summary>${escapeHtml(group.title)}</summary>
+            <div class="details-content">
+                <div class="grid-toggles">${buttons}</div>
             </div>
         </details>
     `;
 }
 
 function renderToggle(item) {
-    const enabledClass = item.enabled ? ' is-on' : '';
+    const on = item.enabled ? ' is-on' : '';
     const name = escapeHtml(cleanName(item.name));
     const id = escapeHtml(item.identifier);
-    const title = escapeHtml(item.name);
-
     return `
-        <button class="xbk-toggle${enabledClass}" type="button" data-identifier="${id}" title="${title}" role="listitem">
-            <span class="xbk-led"></span>
-            <span class="xbk-toggle-text">${name}</span>
-        </button>
+        <div class="menu-item-toggle${on}" data-identifier="${id}" title="${escapeHtml(item.name)}">
+            <div class="menu-item-text">${name}</div>
+            <div class="toggle-led"></div>
+        </div>
     `;
 }
 
@@ -307,7 +451,7 @@ function buildGroups() {
     const order = getPromptOrder();
     const source = order.length ? order : Object.keys(promptsById).map(identifier => ({ identifier }));
     const groups = [];
-    let current = makeGroup('常用开关', 0);
+    let current = makeGroup('常用开关', 0, 0);
 
     for (const entry of source) {
         const prompt = promptsById[entry.identifier];
@@ -316,13 +460,13 @@ function buildGroups() {
         const name = prompt?.name || getBuiltinPromptName(entry.identifier);
         if (isHardDivider(name)) {
             if (current.items.length) groups.push(current);
-            current = makeGroup(name, groups.length);
+            current = makeGroup(name, groups.length, classifyByName(name));
             continue;
         }
 
         if (startsNewSection(name) && current.items.length) {
             groups.push(current);
-            current = makeGroup(name, groups.length);
+            current = makeGroup(name, groups.length, classifyByName(name));
         }
 
         const enabled = promptStateMap.has(entry.identifier)
@@ -337,12 +481,19 @@ function buildGroups() {
 
         if (endsSection(name) && current.items.length) {
             groups.push(current);
-            current = makeGroup('更多条目', groups.length);
+            current = makeGroup('更多条目', groups.length, 0);
         }
     }
 
     if (current.items.length) groups.push(current);
     return groups;
+}
+
+function classifyByName(name) {
+    const s = String(name || '');
+    if (/🔵|💙/.test(s)) return 1;
+    if (/🔴|❤️/.test(s)) return 2;
+    return 0;
 }
 
 function getPromptMap() {
@@ -360,19 +511,11 @@ function getPromptOrder() {
     return [];
 }
 
-function itemMatches(item, groupTitle, query, filter) {
-    if (filter === 'on' && !item.enabled) return false;
-    if (filter === 'off' && item.enabled) return false;
-    if (!query) return true;
-    return normalize(item.name).includes(query)
-        || normalize(groupTitle).includes(query)
-        || normalize(item.identifier).includes(query);
-}
-
-function makeGroup(title, index) {
+// ── 名称处理 ──────────────────────────────────────────────────
+function makeGroup(title, index, cat) {
     return {
-        key: `${index}-${normalize(title).slice(0, 36) || 'group'}`,
-        title,
+        title: cleanTitle(title),
+        cat,
         items: [],
     };
 }
@@ -403,12 +546,9 @@ function cleanTitle(value) {
 function cleanName(value) {
     return String(value || '')
         .replace(/^\s*[└├─>]+\s*/u, '')
+        .replace(/^[⚪️♦️🔵🔴💛💙💚❤️🔞✏️⭐🍊🌧️🍩]+\s*/u, '')
         .replace(/\s+/g, ' ')
         .trim();
-}
-
-function normalize(value) {
-    return String(value || '').toLowerCase().replace(/\s+/g, '');
 }
 
 function isBuiltinPrompt(identifier) {
@@ -432,94 +572,7 @@ function getBuiltinPromptName(identifier) {
     return names[identifier] || '';
 }
 
-function toggleOpen() {
-    setOpen(!root.classList.contains(CLASS.open));
-}
-
-function setOpen(open) {
-    root.classList.toggle(CLASS.open, open);
-    localStorage.setItem(STORAGE.open, String(open));
-    if (open) refreshPanel();
-}
-
-function applySavedPosition() {
-    const position = loadJson(STORAGE.position, null);
-    if (!position || typeof position.left !== 'number' || typeof position.top !== 'number') return;
-    const left = clamp(position.left, 8, Math.max(8, window.innerWidth - 58));
-    const top = clamp(position.top, 8, Math.max(8, window.innerHeight - 58));
-    root.style.left = `${left}px`;
-    root.style.top = `${top}px`;
-    root.style.right = 'auto';
-    root.style.bottom = 'auto';
-}
-
-function enableDragging() {
-    const shell = root.querySelector('.xbk-shell');
-    const handle = root.querySelector('.xbk-drag-handle');
-    let start = null;
-
-    const begin = (event) => {
-        const isFab = event.target.closest('.xbk-fab');
-        const isHandle = event.target.closest('.xbk-drag-handle');
-        if (!isFab && !isHandle) return;
-        if (event.button !== undefined && event.button !== 0) return;
-
-        const rect = root.getBoundingClientRect();
-        start = {
-            pointerId: event.pointerId,
-            x: event.clientX,
-            y: event.clientY,
-            left: rect.left,
-            top: rect.top,
-            moved: false,
-        };
-        root.classList.add(CLASS.dragging);
-        shell.setPointerCapture?.(event.pointerId);
-    };
-
-    const move = (event) => {
-        if (!start || event.pointerId !== start.pointerId) return;
-        const dx = event.clientX - start.x;
-        const dy = event.clientY - start.y;
-        if (Math.abs(dx) + Math.abs(dy) > 4) start.moved = true;
-
-        const rect = root.getBoundingClientRect();
-        const left = clamp(start.left + dx, 8, window.innerWidth - rect.width - 8);
-        const top = clamp(start.top + dy, 8, window.innerHeight - rect.height - 8);
-        root.style.left = `${left}px`;
-        root.style.top = `${top}px`;
-        root.style.right = 'auto';
-        root.style.bottom = 'auto';
-    };
-
-    const end = (event) => {
-        if (!start || event.pointerId !== start.pointerId) return;
-        root.classList.remove(CLASS.dragging);
-        const rect = root.getBoundingClientRect();
-        localStorage.setItem(STORAGE.position, JSON.stringify({ left: rect.left, top: rect.top }));
-        if (start.moved) {
-            suppressNextClick = true;
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        start = null;
-    };
-
-    shell.addEventListener('pointerdown', begin);
-    shell.addEventListener('pointermove', move);
-    shell.addEventListener('pointerup', end);
-    shell.addEventListener('pointercancel', end);
-    handle.addEventListener('click', event => event.preventDefault());
-}
-
-function showToast(message) {
-    if (window.toastr?.warning) {
-        window.toastr.warning(message);
-        return;
-    }
-    console.warn(`[小冰块] ${message}`);
-}
-
+// ── 工具函数 ──────────────────────────────────────────────────
 function loadJson(key, fallback) {
     try {
         const raw = localStorage.getItem(key);
@@ -543,390 +596,177 @@ function escapeHtml(value) {
     }[char]));
 }
 
+// ── 样式表（参照预设悬浮窗 th-orb-v6-custom） ──────────────────
 function injectStyle() {
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
 #${ROOT_ID} {
-    --xbk-bg: rgba(18, 20, 27, 0.84);
-    --xbk-bg: color-mix(in srgb, var(--SmartThemeBlurTintColor, rgba(18, 20, 27, 0.84)) 82%, transparent);
-    --xbk-card: rgba(25, 27, 36, 0.88);
-    --xbk-card: color-mix(in srgb, var(--SmartThemeBlurTintColor, rgba(25, 27, 36, 0.88)) 88%, transparent);
-    --xbk-line: var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
-    --xbk-text: var(--SmartThemeBodyColor, #eef1f5);
-    --xbk-muted: rgba(238, 241, 245, 0.64);
-    --xbk-muted: color-mix(in srgb, var(--SmartThemeBodyColor, #eef1f5) 64%, transparent);
-    --xbk-accent: var(--SmartThemeQuoteColor, #9bd8ff);
-    position: fixed;
-    left: 28px;
-    bottom: 80px;
-    bottom: 10dvh;
+    position: fixed !important;
     z-index: 2147483647 !important;
-    color: var(--xbk-text);
-    font-family: var(--mainFontFamily, "Inter", "Microsoft YaHei", sans-serif);
-    pointer-events: none;
+    width: 48px; height: 48px;
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+    -webkit-transform: translateZ(0); transform: translateZ(0);
 }
-#${ROOT_ID}.xbk-disabled {
-    display: none !important;
+@keyframes xbk-orbBreathe {
+    0%, 100% { text-shadow: 0 0 4px rgba(217,119,87,0.3), 0 0 8px rgba(96,185,200,0.15), 0 0 14px rgba(217,119,87,0.08); }
+    50% { text-shadow: 0 0 8px rgba(217,119,87,0.45), 0 0 16px rgba(96,185,200,0.25), 0 0 24px rgba(217,119,87,0.12); }
 }
-#${ROOT_ID} * {
-    box-sizing: border-box;
+#${ROOT_ID} .orb {
+    position: absolute; top: 0; left: 0;
+    width: 48px; height: 48px; border-radius: 8px; cursor: pointer; z-index: 2;
+    background: transparent; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease;
 }
-#${ROOT_ID} .xbk-overlay {
-    position: fixed;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
+#${ROOT_ID} .orb:hover { background: rgba(255,255,255,0.05); }
+#${ROOT_ID} .orb-icon {
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    display: block;
+    animation: xbk-orbBreathe 2.5s ease-in-out infinite;
 }
-#${ROOT_ID}.xbk-open .xbk-overlay {
-    pointer-events: auto;
+#${ROOT_ID} .orb:hover .orb-icon { transform: scale(1.15); }
+#${ROOT_ID}.open .orb-icon { transform: rotate(90deg) scale(1.1); }
+
+#${ROOT_ID} .menu {
+    position: absolute; width: 340px; pointer-events: none;
+    transform: scale(0.95) translateY(-4px); opacity: 0;
+    transition: transform 0.2s cubic-bezier(0.34,1.3,0.64,1), opacity 0.15s ease;
 }
-#${ROOT_ID} .xbk-shell {
-    width: 42px;
-    height: 42px;
-    pointer-events: auto;
-    position: relative;
+@media (max-width: 768px) { #${ROOT_ID} .menu { width: calc(100vw - 24px); max-width: 340px; } }
+#${ROOT_ID}.open .menu {
+    pointer-events: all; transform: scale(1) translateY(0); opacity: 1;
 }
-#${ROOT_ID}.xbk-open .xbk-shell {
-    width: min(380px, calc(100dvw - 24px));
-    height: min(560px, calc(100dvh - 24px));
+#${ROOT_ID}.open-up .menu { transform: scale(0.95) translateY(4px); }
+#${ROOT_ID}.open.open-up .menu { transform: scale(1) translateY(0); }
+
+#${ROOT_ID} .menu-shell {
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+    overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+    background: rgba(22,22,22,0.95); backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px); position: relative;
 }
-#${ROOT_ID} .xbk-fab {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 1px solid var(--xbk-line);
-    background: rgba(18, 20, 27, 0.84);
-    background: var(--xbk-bg);
-    color: var(--xbk-text);
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.36);
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    padding: 0;
-    user-select: none;
+
+#${ROOT_ID} .menu-head {
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+    background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: grab; flex-shrink: 0;
 }
-#${ROOT_ID} .xbk-fab:hover {
-    filter: brightness(1.12);
+#${ROOT_ID} .menu-head:active { cursor: grabbing; }
+#${ROOT_ID} .menu-title-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#${ROOT_ID} .menu-title {
+    font-size: 13px; font-weight: bold; color: #eeeeee;
+    letter-spacing: 0.05em; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
-#${ROOT_ID} .xbk-fab:active {
-    transform: scale(0.94);
+#${ROOT_ID} .menu-close {
+    width: 22px; height: 22px; border-radius: 4px; border: none;
+    background: transparent; color: rgba(255,255,255,0.5); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    transition: all 0.15s; padding: 0;
 }
-#${ROOT_ID}.xbk-open .xbk-fab {
-    opacity: 0;
-    pointer-events: none;
+#${ROOT_ID} .menu-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+#${ROOT_ID} .category-tabs {
+    display: flex; gap: 0; padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.12); flex-shrink: 0;
 }
-#${ROOT_ID} .xbk-fab-icon {
-    font-size: 24px;
-    line-height: 1;
+#${ROOT_ID} .category-tab {
+    flex: 1; text-align: center; padding: 5px 0; font-size: 11px; cursor: pointer;
+    border-radius: 5px; transition: all 0.18s; color: rgba(255,255,255,0.4);
+    font-weight: 500; margin: 0 2px; user-select: none;
 }
-#${ROOT_ID} .xbk-card {
-    position: absolute;
-    inset: 0;
-    width: min(380px, calc(100dvw - 24px));
-    height: min(560px, calc(100dvh - 24px));
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--xbk-line);
-    border-radius: 14px;
-    background: var(--xbk-card);
-    box-shadow: 0 20px 58px rgba(0, 0, 0, 0.48);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    opacity: 0;
-    transform: scale(0.92);
-    transform-origin: left bottom;
-    pointer-events: none;
-    transition: opacity 160ms ease, transform 160ms ease;
+#${ROOT_ID} .category-tab:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); }
+#${ROOT_ID} .category-tab.cat-1:hover { background: rgba(64,140,255,0.1); color: #6db3ff; }
+#${ROOT_ID} .category-tab.cat-2:hover { background: rgba(230,60,60,0.1); color: #ff7070; }
+#${ROOT_ID} .category-tab.active { font-weight: 700; }
+#${ROOT_ID} .category-tab.cat-0.active { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.95); }
+#${ROOT_ID} .category-tab.cat-1.active { background: rgba(40,120,255,0.22); color: #4d9fff; }
+#${ROOT_ID} .category-tab.cat-2.active { background: rgba(220,40,40,0.22); color: #ff6b6b; }
+
+#${ROOT_ID} .menu-list {
+    padding: 8px 8px 42px 8px; display: flex; flex-direction: column; gap: 4px;
+    overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
+    max-height: 65vh;
 }
-#${ROOT_ID}.xbk-open .xbk-card {
-    opacity: 1;
-    transform: scale(1);
-    pointer-events: auto;
+@media (max-width: 768px) { #${ROOT_ID} .menu-list { max-height: 55vh; } }
+#${ROOT_ID} .menu-list::-webkit-scrollbar { width: 4px; }
+#${ROOT_ID} .menu-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+#${ROOT_ID} details { margin-bottom: 2px; }
+#${ROOT_ID} summary {
+    font-size: 11.5px; font-weight: bold; color: rgba(255,255,255,0.8);
+    padding: 8px 10px; background: rgba(0,0,0,0.15); border-radius: 6px;
+    cursor: pointer; list-style: none; user-select: none;
+    display: flex; justify-content: space-between; align-items: center;
+    text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;
 }
-#${ROOT_ID}.xbk-dragging .xbk-card,
-#${ROOT_ID}.xbk-dragging .xbk-fab {
-    transition: none;
-    cursor: grabbing;
+#${ROOT_ID} summary:hover { background: rgba(255,255,255,0.05); }
+#${ROOT_ID} summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }
+#${ROOT_ID} details[open] > summary::after { transform: rotate(180deg); }
+#${ROOT_ID} .details-content { padding: 8px 0 4px 0; display: flex; flex-direction: column; gap: 6px; }
+
+.grid-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 4px; }
+@media (max-width: 768px) { .grid-toggles { grid-template-columns: 1fr 1fr; } }
+
+#${ROOT_ID} .menu-item-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 28px; padding: 0 8px; border-radius: 6px; box-sizing: border-box;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer; transition: all 0.15s ease; margin: 0;
 }
-#${ROOT_ID} .xbk-header {
-    display: grid;
-    grid-template-columns: 26px 1fr 30px 30px;
-    gap: 8px;
-    align-items: center;
-    min-height: 58px;
-    padding: 12px 14px 10px;
-    border-bottom: 1px dashed var(--xbk-line);
+#${ROOT_ID} .menu-item-toggle:hover { background: rgba(255,255,255,0.08); }
+#${ROOT_ID} .menu-item-text {
+    font-size: 11px; color: rgba(255,255,255,0.7); white-space: nowrap;
+    line-height: 1; margin-top: 1px; overflow: hidden; text-overflow: ellipsis;
 }
-#${ROOT_ID} .xbk-drag-handle,
-#${ROOT_ID} .xbk-icon-btn {
-    width: 30px;
-    height: 30px;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--xbk-muted);
-    cursor: pointer;
-    padding: 0;
+#${ROOT_ID} .toggle-led {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.15); transition: all 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.5); margin-left: 4px;
 }
-#${ROOT_ID} .xbk-drag-handle {
-    width: 26px;
-    cursor: grab;
-    letter-spacing: -3px;
+#${ROOT_ID} .menu-item-toggle.is-on { background: rgba(96,185,200,0.15); border-color: rgba(96,185,200,0.4); }
+#${ROOT_ID} .menu-item-toggle.is-on .menu-item-text { color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+#${ROOT_ID} .menu-item-toggle.is-on .toggle-led { background: #60b9c8; box-shadow: 0 0 6px #60b9c8; border-color: transparent; }
+
+#${ROOT_ID} .menu-foot {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px 13px; font-size: 10px; color: rgba(255,255,255,0.5);
+    background: rgba(0,0,0,0.88); pointer-events: none; letter-spacing: 0.04em;
 }
-#${ROOT_ID} .xbk-icon-btn:hover,
-#${ROOT_ID} .xbk-drag-handle:hover {
-    border-color: var(--xbk-line);
-    color: var(--xbk-text);
-    background: rgba(255, 255, 255, 0.06);
+#${ROOT_ID} .fox-link {
+    cursor: pointer; color: rgba(96,185,200,0.6); font-weight: bold; letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); font-size: 10px;
 }
-#${ROOT_ID} .xbk-title {
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.15;
+#${ROOT_ID} .fox-link:hover { color: #e8b072; text-shadow: 0 0 8px rgba(232,176,114,0.8); transform: scale(1.08); }
+
+@keyframes xbk-orb-in { from { opacity:0; transform: scale(0.5); } to { opacity:1; transform: scale(1); } }
+#${ROOT_ID} { animation: xbk-orb-in 0.2s cubic-bezier(0.34,1.3,0.64,1) both; }
+
+#xbk-extension-settings { margin: 10px 0; }
+#xbk-extension-settings .xbk-settings-card {
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.18));
+    border-radius: 8px; padding: 10px 12px;
+    background: rgba(30,32,40,0.45);
 }
-#${ROOT_ID} .xbk-subtitle {
-    margin-top: 2px;
-    color: var(--xbk-muted);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+#xbk-extension-settings .xbk-settings-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;
 }
-#${ROOT_ID} .xbk-toolbar {
-    display: grid;
-    gap: 10px;
-    padding: 12px 14px 8px;
+#xbk-extension-settings .xbk-settings-title { color: var(--SmartThemeBodyColor, inherit); font-weight: 700; line-height: 1.2; }
+#xbk-extension-settings .xbk-settings-subtitle { margin-top: 2px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.62; font-size: 0.82em; }
+#xbk-extension-settings .xbk-settings-pill {
+    flex: 0 0 auto; border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.18));
+    border-radius: 999px; padding: 3px 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.72; font-size: 0.78em;
 }
-#${ROOT_ID} .xbk-search-wrap {
-    display: grid;
-    grid-template-columns: 18px 1fr;
-    align-items: center;
-    min-height: 34px;
-    padding: 0 10px;
-    border: 1px solid var(--xbk-line);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--xbk-muted);
-}
-#${ROOT_ID} .xbk-search {
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: var(--xbk-text);
-    font: inherit;
-    font-size: 13px;
-}
-#${ROOT_ID} .xbk-search::placeholder {
-    color: var(--xbk-muted);
-}
-#${ROOT_ID} .xbk-filters {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-}
-#${ROOT_ID} .xbk-filter {
-    min-height: 28px;
-    border: 1px solid var(--xbk-line);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--xbk-muted);
-    cursor: pointer;
-    font-size: 12px;
-}
-#${ROOT_ID} .xbk-filter.is-active {
-    color: #101319;
-    border-color: transparent;
-    background: var(--xbk-accent);
-    font-weight: 700;
-}
-#${ROOT_ID} .xbk-stats {
-    padding: 0 14px 8px;
-    color: var(--xbk-muted);
-    font-size: 12px;
-}
-#${ROOT_ID} .xbk-list {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    padding: 0 14px 14px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--xbk-line) transparent;
-}
-#${ROOT_ID} .xbk-list::-webkit-scrollbar {
-    width: 6px;
-}
-#${ROOT_ID} .xbk-list::-webkit-scrollbar-thumb {
-    background: var(--xbk-line);
-    border-radius: 999px;
-}
-#${ROOT_ID} .xbk-group {
-    border: 1px solid var(--xbk-line);
-    border-radius: 10px;
-    margin-bottom: 8px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.035);
-}
-#${ROOT_ID} .xbk-group[open] {
-    background: rgba(255, 255, 255, 0.055);
-}
-#${ROOT_ID} .xbk-group summary {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 10px;
-    min-height: 36px;
-    padding: 8px 10px;
-    cursor: pointer;
-    user-select: none;
-}
-#${ROOT_ID} .xbk-group summary::-webkit-details-marker {
-    display: none;
-}
-#${ROOT_ID} .xbk-group-title {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 13px;
-    font-weight: 700;
-}
-#${ROOT_ID} .xbk-group-count {
-    color: var(--xbk-muted);
-    font-size: 11px;
-}
-#${ROOT_ID} .xbk-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-    padding: 0 10px 10px;
-}
-#${ROOT_ID} .xbk-toggle {
-    display: grid;
-    grid-template-columns: 10px 1fr;
-    align-items: center;
-    gap: 7px;
-    min-width: 0;
-    min-height: 34px;
-    padding: 7px 8px;
-    border: 1px solid var(--xbk-line);
-    border-radius: 9px;
-    background: rgba(0, 0, 0, 0.12);
-    color: var(--xbk-muted);
-    cursor: pointer;
-    text-align: left;
-}
-#${ROOT_ID} .xbk-toggle:hover {
-    color: var(--xbk-text);
-    background: rgba(255, 255, 255, 0.07);
-}
-#${ROOT_ID} .xbk-toggle:active {
-    transform: scale(0.98);
-}
-#${ROOT_ID} .xbk-toggle.is-on {
-    color: var(--xbk-text);
-    border-color: color-mix(in srgb, var(--xbk-accent) 55%, var(--xbk-line));
-    background: color-mix(in srgb, var(--xbk-accent) 14%, transparent);
-}
-#${ROOT_ID} .xbk-led {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--xbk-line);
-}
-#${ROOT_ID} .xbk-toggle.is-on .xbk-led {
-    background: var(--xbk-accent);
-    box-shadow: 0 0 10px var(--xbk-accent);
-}
-#${ROOT_ID} .xbk-toggle-text {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    line-height: 1.2;
-}
-#${ROOT_ID} .xbk-empty {
-    padding: 28px 14px;
-    text-align: center;
-    color: var(--xbk-muted);
-    font-size: 13px;
-}
-#${SETTINGS_ID} {
-    margin: 10px 0;
-}
-#${SETTINGS_ID} .xbk-settings-card {
-    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
-    border-radius: 8px;
-    padding: 10px 12px;
-    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, rgba(30, 32, 40, 0.45)) 74%, transparent);
-}
-#${SETTINGS_ID} .xbk-settings-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-#${SETTINGS_ID} .xbk-settings-title {
-    color: var(--SmartThemeBodyColor, inherit);
-    font-weight: 700;
-    line-height: 1.2;
-}
-#${SETTINGS_ID} .xbk-settings-subtitle {
-    margin-top: 2px;
-    color: var(--SmartThemeBodyColor, inherit);
-    opacity: 0.62;
-    font-size: 0.82em;
-}
-#${SETTINGS_ID} .xbk-settings-pill {
-    flex: 0 0 auto;
-    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
-    border-radius: 999px;
-    padding: 3px 8px;
-    color: var(--SmartThemeBodyColor, inherit);
-    opacity: 0.72;
-    font-size: 0.78em;
-}
-#${SETTINGS_ID} .xbk-settings-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: fit-content;
-    margin: 6px 0;
-    cursor: pointer;
-}
-#${SETTINGS_ID} .xbk-settings-row input {
-    margin: 0;
-}
-#${SETTINGS_ID} .xbk-settings-hint {
-    margin-top: 8px;
-    color: var(--SmartThemeBodyColor, inherit);
-    opacity: 0.65;
-    font-size: 0.85em;
-}
-@media (max-width: 520px) {
-    #${ROOT_ID} {
-        left: 16px;
-        bottom: 72px;
-    }
-    #${ROOT_ID}.xbk-open {
-        left: 12px !important;
-        right: auto;
-    }
-    #${ROOT_ID} .xbk-grid {
-        grid-template-columns: 1fr;
-    }
-}
+#xbk-extension-settings .xbk-settings-row { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 6px 0; cursor: pointer; }
+#xbk-extension-settings .xbk-settings-row input { margin: 0; }
+#xbk-extension-settings .xbk-settings-hint { margin-top: 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.65; font-size: 0.85em; }
 `;
     document.head.appendChild(style);
 }
 
+// ── 启动入口 ──────────────────────────────────────────────────
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot, { once: true });
 } else {

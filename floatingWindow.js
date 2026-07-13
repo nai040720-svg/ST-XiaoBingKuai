@@ -3018,7 +3018,6 @@ export default function initFloatingWindow(bridge) {
           localStorage.removeItem(currentKey);
         }
 
-        cleanupLegacyUiCache();
     
         // 初始化保存的UI
         function loadSavedUI() {
@@ -3109,6 +3108,106 @@ export default function initFloatingWindow(bridge) {
           if (cacheKey !== "orbV6_custom_ui") localStorage.removeItem("orbV6_custom_ui");
           toastr.success("悬浮窗布局已保存", "保存成功");
         }
+
+        function readObjectPath(rootObj, path) {
+          return path.reduce((obj, key) => obj?.[key], rootObj);
+        }
+
+        function collectPresetSyncSources() {
+          const sources = [];
+          const seen = new Set();
+          const addSource = (value) => {
+            if (typeof value !== "string") return;
+            if (!value.includes(ID) || !value.includes('class="menu-list"')) return;
+            if (seen.has(value)) return;
+            seen.add(value);
+            sources.push(value);
+          };
+          const scan = (value, depth = 0, visited = new Set()) => {
+            if (depth > 8 || value == null) return;
+            if (typeof value === "string") {
+              addSource(value);
+              return;
+            }
+            if (typeof value !== "object" || visited.has(value)) return;
+            visited.add(value);
+            if (Array.isArray(value)) {
+              value.forEach((item) => scan(item, depth + 1, visited));
+              return;
+            }
+            for (const child of Object.values(value)) scan(child, depth + 1, visited);
+          };
+
+          const roots = [
+            readObjectPath(_bridge, ["st", "oai_settings", "extensions", "tavern_helper", "scripts"]),
+            readObjectPath(_bridge, ["st", "oai_settings", "extensions"]),
+            readObjectPath(pwin, ["oai_settings", "extensions", "tavern_helper", "scripts"]),
+            readObjectPath(pwin, ["oai_settings", "extensions"]),
+            readObjectPath(pwin, ["extension_settings", "tavern_helper"]),
+          ];
+          roots.forEach((rootValue) => scan(rootValue));
+
+          try {
+            pdoc.querySelectorAll("textarea, input, [contenteditable='true'], [contenteditable='plaintext-only']").forEach((el) => {
+              addSource(el.value || el.textContent || "");
+            });
+          } catch (_) {}
+
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (!key || !/tavern|helper|script|preset|orb|xiaobing|冰块/i.test(key)) continue;
+              addSource(localStorage.getItem(key) || "");
+            }
+          } catch (_) {}
+
+          return sources;
+        }
+
+        function extractPresetShell(source) {
+          const titleMatch = source.match(/<div class="menu-title">([\s\S]*?)<\/div>/);
+          const listMatch = source.match(/(<div class="menu-list">)([\s\S]*?)(\s*<\/div>\s*<div class="menu-foot">)/);
+          if (!listMatch) return null;
+          return {
+            title: titleMatch ? titleMatch[1] : "",
+            list: listMatch[2].trim(),
+          };
+        }
+
+        function applyPresetShell(shellData) {
+          const titleEl = pdoc.querySelector(`#${ID}-head .menu-title`);
+          const listEl = pdoc.querySelector(`#${ID} .menu-list`);
+          if (!listEl || !shellData?.list) return false;
+          if (titleEl && shellData.title) titleEl.innerHTML = shellData.title;
+          listEl.innerHTML = shellData.list;
+          listEl.querySelectorAll("[data-model-bound]").forEach((el) => el.removeAttribute("data-model-bound"));
+          listEl.querySelectorAll("[data-rec-bound]").forEach((el) => el.removeAttribute("data-rec-bound"));
+          pdoc.querySelectorAll(`#${ID} [contenteditable]`).forEach((el) => el.removeAttribute("contenteditable"));
+          initCategoryTabs();
+          renderModelSegments();
+          attachModelEventHandlers();
+          attachRecToggleHandler();
+          initDetectState();
+          refreshBindingBadges();
+          saveCurrentUI();
+          return true;
+        }
+
+        function syncFromPresetFloatingWindow() {
+          const sources = collectPresetSyncSources();
+          for (const source of sources) {
+            const shellData = extractPresetShell(source);
+            if (shellData && applyPresetShell(shellData)) {
+              toastr.success("已同步当前预设里的悬浮窗布局", "同步完成");
+              return true;
+            }
+          }
+          toastr.warning("没有找到可同步的预设悬浮窗。请先导入/启用小冰块预设，或打开酒馆助手脚本页后再同步。");
+          return false;
+        }
+
+        pwin.__xiaobingkuai_syncFromPreset = syncFromPresetFloatingWindow;
+        window.__xiaobingkuai_syncFromPreset = syncFromPresetFloatingWindow;
 
         function jsStringLiteral(value) {
           return JSON.stringify(String(value)).slice(1, -1).replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
@@ -3864,6 +3963,7 @@ export default function initFloatingWindow(bridge) {
     const ID = "th-orb-v6-custom";
     document.getElementById(ID)?.remove();
     document.getElementById(ID + "-style")?.remove();
+    delete window.__xiaobingkuai_syncFromPreset;
     delete window.__xiaobingkuai_bridge;
   };
 }

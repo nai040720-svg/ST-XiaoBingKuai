@@ -103,6 +103,21 @@ jQuery(() => {
         else unloadFloatingWindow();
     });
 
+    $('#extensions_settings').on('click', '#xiaobingkuai_sync_preset', function () {
+        settings.enabled = true;
+        $('#xiaobingkuai_enable').prop('checked', true);
+        saveSettings();
+        loadFloatingWindow();
+
+        setTimeout(() => {
+            if (typeof window.__xiaobingkuai_syncFromPreset === 'function') {
+                window.__xiaobingkuai_syncFromPreset();
+            } else {
+                toastr?.warning?.('悬浮窗还没有加载完成，请稍后再试');
+            }
+        }, 100);
+    });
+
     if (settings.enabled) {
         const tryLoad = () => {
             if (typeof promptManager !== 'undefined' && promptManager) loadFloatingWindow();

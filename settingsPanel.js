@@ -23,6 +23,14 @@ export function createSettingsPanelHtml() {
 
             <hr>
 
+            <div class="flex-container" style="gap:6px;">
+                <div class="flex1 menu_button menu_button_full" id="xiaobingkuai_sync_preset" style="text-align:center; cursor:pointer;">
+                    <small>一键同步预设悬浮窗</small>
+                </div>
+            </div>
+
+            <hr>
+
             <div class="flex-container">
                 <div class="flex1" style="text-align:center;">
                     <small class="opacity70p">版本 1.1.0</small>

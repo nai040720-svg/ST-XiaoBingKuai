@@ -20,6 +20,7 @@ const STORAGE = {
 };
 
 const CLASS = {
+    disabled: 'xbk-disabled',
     open: 'xbk-open',
     dragging: 'xbk-dragging',
 };
@@ -38,19 +39,10 @@ let settingsMountAttempts = 0;
 function boot() {
     removeExistingUi();
     injectStyle();
+    createPanel();
     mountSettingsPanel();
-    if (isFloatingEnabled()) {
-        ensurePanel();
-    }
+    applyFloatingEnabled(isFloatingEnabled());
     bindPromptUpdates();
-}
-
-function ensurePanel() {
-    if (!root) {
-        createPanel();
-    }
-    root.hidden = false;
-    refreshPanel();
 }
 
 function createPanel() {
@@ -103,6 +95,7 @@ function createPanel() {
     applySavedPosition();
     bindPanelEvents();
     enableDragging();
+    refreshPanel();
 }
 
 function mountSettingsPanel() {
@@ -121,21 +114,21 @@ function mountSettingsPanel() {
 
     const panel = document.createElement('div');
     panel.id = SETTINGS_ID;
-    panel.className = 'extension_settings xbk-settings-block';
+    panel.className = 'xbk-settings-block';
     panel.innerHTML = `
-        <div class="inline-drawer">
-            <div class="inline-drawer-toggle inline-drawer-header">
-                <b>❄️ 小冰块V3.32双适配版</b>
-                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        <div class="xbk-settings-card">
+            <div class="xbk-settings-head">
+                <div>
+                    <div class="xbk-settings-title">❄️ 小冰块V3.32双适配版</div>
+                    <div class="xbk-settings-subtitle">独立扩展插件 / Preset Switchboard</div>
+                </div>
+                <span class="xbk-settings-pill">独立悬浮窗</span>
             </div>
-            <div class="inline-drawer-content">
-                <div class="xbk-settings-intro">预设条目悬浮窗 / Preset Switchboard</div>
-                <label class="checkbox_label xbk-settings-row" for="xbk-enable-floating">
-                    <input id="xbk-enable-floating" type="checkbox" />
-                    <span>开启悬浮窗</span>
-                </label>
-                <div class="xbk-settings-hint">关闭后只隐藏悬浮按钮和面板，不会改动任何预设条目。</div>
-            </div>
+            <label class="checkbox_label xbk-settings-row" for="xbk-enable-floating">
+                <input id="xbk-enable-floating" type="checkbox" />
+                <span>开启悬浮窗</span>
+            </label>
+            <div class="xbk-settings-hint">只控制本插件自己的悬浮按钮，与酒馆助手悬浮窗无绑定。</div>
         </div>
     `;
     host.appendChild(panel);
@@ -143,6 +136,14 @@ function mountSettingsPanel() {
     const checkbox = panel.querySelector('#xbk-enable-floating');
     checkbox.checked = isFloatingEnabled();
     checkbox.addEventListener('change', () => {
+        setFloatingEnabled(checkbox.checked);
+    });
+    panel.addEventListener('click', (event) => {
+        if (event.target === checkbox) return;
+        const row = event.target.closest('.xbk-settings-row');
+        if (!row) return;
+        event.preventDefault();
+        checkbox.checked = !checkbox.checked;
         setFloatingEnabled(checkbox.checked);
     });
 }
@@ -221,16 +222,14 @@ function setFloatingEnabled(enabled) {
     localStorage.setItem(STORAGE.enabled, String(enabled));
     const checkbox = document.querySelector('#xbk-enable-floating');
     if (checkbox) checkbox.checked = enabled;
+    applyFloatingEnabled(enabled);
+}
 
-    if (enabled) {
-        ensurePanel();
-        return;
-    }
-
-    if (root) {
-        setOpen(false);
-        root.hidden = true;
-    }
+function applyFloatingEnabled(enabled) {
+    if (!root) return;
+    root.classList.toggle(CLASS.disabled, !enabled);
+    if (!enabled) setOpen(false);
+    if (enabled) refreshPanel();
 }
 
 function refreshPanel() {
@@ -549,6 +548,9 @@ function injectStyle() {
     font-family: var(--mainFontFamily, "Inter", "Microsoft YaHei", sans-serif);
     pointer-events: none;
 }
+#${ROOT_ID}.xbk-disabled {
+    display: none !important;
+}
 #${ROOT_ID} * {
     box-sizing: border-box;
 }
@@ -835,14 +837,41 @@ function injectStyle() {
     color: var(--xbk-muted);
     font-size: 13px;
 }
-#${SETTINGS_ID}.xbk-settings-block {
-    margin-top: 8px;
+#${SETTINGS_ID} {
+    margin: 10px 0;
 }
-#${SETTINGS_ID} .xbk-settings-intro {
-    margin: 6px 0 10px;
+#${SETTINGS_ID} .xbk-settings-card {
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, rgba(30, 32, 40, 0.45)) 74%, transparent);
+}
+#${SETTINGS_ID} .xbk-settings-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+#${SETTINGS_ID} .xbk-settings-title {
     color: var(--SmartThemeBodyColor, inherit);
-    opacity: 0.82;
-    font-size: 0.9em;
+    font-weight: 700;
+    line-height: 1.2;
+}
+#${SETTINGS_ID} .xbk-settings-subtitle {
+    margin-top: 2px;
+    color: var(--SmartThemeBodyColor, inherit);
+    opacity: 0.62;
+    font-size: 0.82em;
+}
+#${SETTINGS_ID} .xbk-settings-pill {
+    flex: 0 0 auto;
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
+    border-radius: 999px;
+    padding: 3px 8px;
+    color: var(--SmartThemeBodyColor, inherit);
+    opacity: 0.72;
+    font-size: 0.78em;
 }
 #${SETTINGS_ID} .xbk-settings-row {
     display: flex;
@@ -851,6 +880,9 @@ function injectStyle() {
     width: fit-content;
     margin: 6px 0;
     cursor: pointer;
+}
+#${SETTINGS_ID} .xbk-settings-row input {
+    margin: 0;
 }
 #${SETTINGS_ID} .xbk-settings-hint {
     margin-top: 8px;

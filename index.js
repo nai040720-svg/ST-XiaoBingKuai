@@ -364,18 +364,17 @@ function mountSettingsPanel() {
 
     const panel = document.createElement('div');
     panel.id = SETTINGS_ID;
-    panel.className = 'xbk-settings-block';
+    panel.className = 'xbk-settings-block inline-drawer';
     panel.innerHTML =
-        '<div class="xbk-settings-card">' +
-            '<div class="xbk-settings-head">' +
-                '<div><div class="xbk-settings-title">❄️ 小冰块V3.32双适配版</div>' +
-                '<div class="xbk-settings-subtitle">独立扩展插件 / Preset Switchboard</div></div>' +
-                '<span class="xbk-settings-pill">独立悬浮窗</span>' +
-            '</div>' +
+        '<div class="inline-drawer-toggle inline-drawer-header xbk-drawer-header">' +
+            '<b>❄️ 小冰块V3.32双适配版</b>' +
+            '<div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>' +
+        '</div>' +
+        '<div class="inline-drawer-content" style="display:none;">' +
+            '<div class="xbk-settings-hint">只控制本插件自己的悬浮按钮，与酒馆助手悬浮窗无绑定。</div>' +
             '<label class="checkbox_label xbk-settings-row" for="xbk-enable-floating">' +
                 '<input id="xbk-enable-floating" type="checkbox" /><span>开启悬浮窗</span>' +
             '</label>' +
-            '<div class="xbk-settings-hint">只控制本插件自己的悬浮按钮，与酒馆助手悬浮窗无绑定。</div>' +
         '</div>';
     host.appendChild(panel);
 
@@ -660,14 +659,11 @@ function injectStyle() {
 '@keyframes xbk-orb-in { from { opacity:0; } to { opacity:1; } }',
 '#' + ROOT_ID + ' { animation: xbk-orb-in 0.2s ease-out both; }',
 '#' + SETTINGS_ID + ' { margin: 10px 0; }',
-'#' + SETTINGS_ID + ' .xbk-settings-card { border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.18)); border-radius: 8px; padding: 10px 12px; background: rgba(30,32,40,0.45); }',
-'#' + SETTINGS_ID + ' .xbk-settings-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }',
-'#' + SETTINGS_ID + ' .xbk-settings-title { color: var(--SmartThemeBodyColor, inherit); font-weight: 700; line-height: 1.2; }',
-'#' + SETTINGS_ID + ' .xbk-settings-subtitle { margin-top: 2px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.62; font-size: 0.82em; }',
-'#' + SETTINGS_ID + ' .xbk-settings-pill { flex: 0 0 auto; border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.18)); border-radius: 999px; padding: 3px 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.72; font-size: 0.78em; }',
-'#' + SETTINGS_ID + ' .xbk-settings-row { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 6px 0; cursor: pointer; }',
+'#' + SETTINGS_ID + ' .xbk-drawer-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; }',
+'#' + SETTINGS_ID + ' .xbk-drawer-header b { color: var(--SmartThemeBodyColor, inherit); }',
+'#' + SETTINGS_ID + ' .xbk-settings-hint { margin-bottom: 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.65; font-size: 0.85em; }',
+'#' + SETTINGS_ID + ' .xbk-settings-row { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 4px 0; cursor: pointer; }',
 '#' + SETTINGS_ID + ' .xbk-settings-row input { margin: 0; }',
-'#' + SETTINGS_ID + ' .xbk-settings-hint { margin-top: 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.65; font-size: 0.85em; }',
     ].join('\n');
     document.head.appendChild(style);
 }

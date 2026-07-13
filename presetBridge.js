@@ -18,7 +18,7 @@ export function isPromptEnabled(identifier) {
     return entry ? entry.enabled !== false : false;
 }
 
-// ── 切换条目开关（直接改数据，触发保存） ────────────────────
+// ── 切换条目开关（直接改数据，触发保存+重新渲染） ────────────
 export function togglePrompt(identifier) {
     if (!promptManager || typeof promptManager.getPromptOrderEntry !== 'function') return false;
     const entry = promptManager.getPromptOrderEntry(getActiveCharacter(), identifier);
@@ -33,10 +33,8 @@ export function setPromptEnabled(identifier, enabled) {
     if (!promptManager || typeof promptManager.getPromptOrderEntry !== 'function') return false;
     const entry = promptManager.getPromptOrderEntry(getActiveCharacter(), identifier);
     if (!entry) return false;
-    if (entry.enabled === enabled || (entry.enabled !== false && enabled) || (entry.enabled === false && !enabled)) {
-        // 已经是目标状态，无需操作
-        return true;
-    }
+    const current = entry.enabled !== false;
+    if (current === enabled) return true;
     entry.enabled = enabled;
     persist();
     return true;
@@ -69,11 +67,9 @@ export function findIdentifierByName(name) {
 
 // ── 通过ID或名称操作开关（统一入口） ────────────────────────
 export function toggleByKey(key) {
-    // key 可以是 identifier 或名称
     if (isPromptEnabled(key)) {
         return setPromptEnabled(key, false);
     }
-    // 尝试作为名称查找
     const id = findIdentifierByName(key);
     if (id) return togglePrompt(id);
     return false;
@@ -108,16 +104,28 @@ function stripPrefix(s) {
     return String(s || '').replace(/^[^\u4e00-\u9fff\w\d]+/u, '').trim();
 }
 
-// ── 持久化保存 + 刷新Token ──────────────────────────────────
+// ── 持久化保存 + 重新渲染列表 + 刷新Token ───────────────────
+let persistTimer = null;
+
 function persist() {
-    // 保存设置到后端
-    if (typeof saveSettings === 'function') {
-        saveSettings();
-    }
-    // 刷新 Token 统计
-    if (promptManager && typeof promptManager.calculateContextTokens === 'function') {
-        try { promptManager.calculateContextTokens(true); } catch (_) {}
-    }
+    // 防抖：短时间内连续操作只触发一次渲染
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(async () => {
+        // 1. 重新渲染预设列表（让前端UI更新）
+        if (promptManager && typeof promptManager.renderPromptManagerListItems === 'function') {
+            try { await promptManager.renderPromptManagerListItems(); } catch (_) {}
+        }
+        // 2. 刷新 Token 统计
+        if (promptManager && typeof promptManager.calculateContextTokens === 'function') {
+            try { promptManager.calculateContextTokens(true); } catch (_) {}
+        }
+        // 3. 保存设置到后端
+        if (typeof saveSettings === 'function') {
+            try { saveSettings(); } catch (_) {}
+        }
+        // 4. 通知悬浮窗刷新状态
+        notifyStateChanged();
+    }, 50);
 }
 
 // ── 事件订阅：预设状态变化时通知悬浮窗刷新 ──────────────────

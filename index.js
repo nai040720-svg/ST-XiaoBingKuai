@@ -3,7 +3,7 @@
 // 直接 import ST 内部模块，通过 API 操作预设，不碰二次渲染的 DOM
 // ============================================================
 
-import { extension_settings } from '../../../extensions.js';
+import { extension_settings, getContext, getApiUrl } from '../../../extensions.js';
 import { promptManager, oai_settings } from '../../../openai.js';
 import { saveSettings, eventSource, event_types } from '../../../../script.js';
 import { isMobile } from '../../../RossAscends-mods.js';
@@ -22,7 +22,7 @@ import {
     onPromptStateChanged,
 } from './presetBridge.js';
 
-// 悬浮窗 UI 模块（静态 import，避免动态 import() 路径问题）
+// 悬浮窗 UI 模块（静态 import）
 import initFloatingWindow from './floatingWindow.js';
 
 // ── 扩展设置 ────────────────────────────────────────────────
@@ -45,7 +45,6 @@ function getSettings() {
 // ── 桥接接口：悬浮窗通过这个对象与 ST 通信 ──────────────────
 function createBridgeInterface() {
     return {
-        // 预设条目操作（纯API，不碰DOM）
         preset: {
             isEnabled: bridgeIsEnabled,
             toggle: bridgeToggle,
@@ -57,7 +56,6 @@ function createBridgeInterface() {
             findByName: bridgeFindByName,
             getAllStates: bridgeGetAll,
         },
-        // ST 内部对象引用
         st: {
             promptManager,
             oai_settings,
@@ -66,9 +64,7 @@ function createBridgeInterface() {
             event_types,
             isMobile,
         },
-        // 事件订阅
         onStateChanged: onPromptStateChanged,
-        // DOM 文档（悬浮窗UI仍需要DOM来渲染自身）
         document,
         window,
     };
@@ -81,7 +77,6 @@ let loaded = false;
 function loadFloatingWindow() {
     if (loaded) return;
     loaded = true;
-
     try {
         const bridge = createBridgeInterface();
         fwCleanup = initFloatingWindow(bridge) || null;
@@ -99,24 +94,35 @@ function unloadFloatingWindow() {
     fwCleanup = null;
     const el = document.getElementById(ID);
     if (el) el.remove();
+    const style = document.getElementById(ID + '-style');
+    if (style) style.remove();
     loaded = false;
     console.log(LOG_PREFIX, '悬浮窗已卸载');
 }
 
-// ── 扩展设置面板 ────────────────────────────────────────────
+// ── 扩展设置面板 HTML ───────────────────────────────────────
 function settingsHtml() {
     const settings = getSettings();
     return `
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>小冰块悬浮窗</b>
+                <b>❄️ 小冰块悬浮窗</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
             </div>
             <div class="inline-drawer-content">
-                <label class="checkbox_label">
+                <div class="flex-container textAlignCenter" style="margin-bottom:10px;">
+                    <small class="opacity70p">API驱动 · 兼容BaiBai预设分组 · 不依赖DOM渲染</small>
+                </div>
+                <label class="checkbox_label flex1" id="xiaobingkuai_enable_wrap">
                     <input type="checkbox" id="xiaobingkuai_enable" ${settings.enabled ? 'checked' : ''}>
-                    <span>启用悬浮窗</span>
+                    <span><b>启用悬浮窗</b></span>
                 </label>
+                <hr>
+                <div class="flex-container">
+                    <div class="flex1" style="text-align:center;">
+                        <small class="opacity70p">版本 1.0.3</small>
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -142,7 +148,6 @@ jQuery(() => {
     // 默认开启则加载，延迟到 ST 完全初始化后
     const settings = getSettings();
     if (settings.enabled) {
-        // 等待预设管理器就绪
         const tryLoad = () => {
             if (typeof promptManager !== 'undefined' && promptManager) {
                 loadFloatingWindow();

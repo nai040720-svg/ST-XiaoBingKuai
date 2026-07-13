@@ -138,14 +138,6 @@ function mountSettingsPanel() {
     checkbox.addEventListener('change', () => {
         setFloatingEnabled(checkbox.checked);
     });
-    panel.addEventListener('click', (event) => {
-        if (event.target === checkbox) return;
-        const row = event.target.closest('.xbk-settings-row');
-        if (!row) return;
-        event.preventDefault();
-        checkbox.checked = !checkbox.checked;
-        setFloatingEnabled(checkbox.checked);
-    });
 }
 
 function removeExistingUi() {

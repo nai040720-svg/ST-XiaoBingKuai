@@ -11,7 +11,9 @@ import { promptManager } from '../../../openai.js';
 
 const ROOT_ID = 'xbk-floating-panel';
 const STYLE_ID = 'xbk-floating-panel-style';
+const SETTINGS_ID = 'xbk-extension-settings';
 const STORAGE = {
+    enabled: 'xbkFloatingPanel.enabled',
     open: 'xbkFloatingPanel.open',
     position: 'xbkFloatingPanel.position',
     collapsedGroups: 'xbkFloatingPanel.collapsedGroups',
@@ -31,16 +33,27 @@ let activeFilter = 'all';
 let promptStateMap = new Map();
 let collapsedGroups = loadJson(STORAGE.collapsedGroups, {});
 let suppressNextClick = false;
+let settingsMountAttempts = 0;
 
 function boot() {
-    if (document.getElementById(ROOT_ID)) return;
     injectStyle();
-    createPanel();
+    mountSettingsPanel();
+    if (isFloatingEnabled()) {
+        ensurePanel();
+    }
     bindPromptUpdates();
+}
+
+function ensurePanel() {
+    if (!root) {
+        createPanel();
+    }
+    root.hidden = false;
     refreshPanel();
 }
 
 function createPanel() {
+    if (document.getElementById(ROOT_ID)) return;
     root = document.createElement('div');
     root.id = ROOT_ID;
     root.innerHTML = `
@@ -90,6 +103,49 @@ function createPanel() {
     applySavedPosition();
     bindPanelEvents();
     enableDragging();
+}
+
+function mountSettingsPanel() {
+    if (document.getElementById(SETTINGS_ID)) return;
+    const host = document.querySelector('#extensions_settings')
+        || document.querySelector('#extensions_settings2')
+        || document.querySelector('#extensions-settings')
+        || document.querySelector('.extensions_settings');
+
+    if (!host) {
+        if (settingsMountAttempts < 20) {
+            settingsMountAttempts += 1;
+            setTimeout(mountSettingsPanel, 250);
+        }
+        return;
+    }
+
+    const panel = document.createElement('div');
+    panel.id = SETTINGS_ID;
+    panel.className = 'extension_settings xbk-settings-block';
+    panel.innerHTML = `
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>❄️ 小冰块V3.32双适配版</b>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+            </div>
+            <div class="inline-drawer-content">
+                <div class="xbk-settings-intro">预设条目悬浮窗 / Preset Switchboard</div>
+                <label class="checkbox_label xbk-settings-row" for="xbk-enable-floating">
+                    <input id="xbk-enable-floating" type="checkbox" />
+                    <span>开启悬浮窗</span>
+                </label>
+                <div class="xbk-settings-hint">关闭后只隐藏悬浮按钮和面板，不会改动任何预设条目。</div>
+            </div>
+        </div>
+    `;
+    host.appendChild(panel);
+
+    const checkbox = panel.querySelector('#xbk-enable-floating');
+    checkbox.checked = isFloatingEnabled();
+    checkbox.addEventListener('change', () => {
+        setFloatingEnabled(checkbox.checked);
+    });
 }
 
 function bindPanelEvents() {
@@ -145,6 +201,26 @@ function bindPromptUpdates() {
         promptStateMap = new Map(states.map(item => [item.identifier, item.enabled]));
         render();
     });
+}
+
+function isFloatingEnabled() {
+    return localStorage.getItem(STORAGE.enabled) !== 'false';
+}
+
+function setFloatingEnabled(enabled) {
+    localStorage.setItem(STORAGE.enabled, String(enabled));
+    const checkbox = document.querySelector('#xbk-enable-floating');
+    if (checkbox) checkbox.checked = enabled;
+
+    if (enabled) {
+        ensurePanel();
+        return;
+    }
+
+    if (root) {
+        setOpen(false);
+        root.hidden = true;
+    }
 }
 
 function refreshPanel() {
@@ -746,6 +822,29 @@ function injectStyle() {
     text-align: center;
     color: var(--xbk-muted);
     font-size: 13px;
+}
+#${SETTINGS_ID}.xbk-settings-block {
+    margin-top: 8px;
+}
+#${SETTINGS_ID} .xbk-settings-intro {
+    margin: 6px 0 10px;
+    color: var(--SmartThemeBodyColor, inherit);
+    opacity: 0.82;
+    font-size: 0.9em;
+}
+#${SETTINGS_ID} .xbk-settings-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    margin: 6px 0;
+    cursor: pointer;
+}
+#${SETTINGS_ID} .xbk-settings-hint {
+    margin-top: 8px;
+    color: var(--SmartThemeBodyColor, inherit);
+    opacity: 0.65;
+    font-size: 0.85em;
 }
 @media (max-width: 520px) {
     #${ROOT_ID} {

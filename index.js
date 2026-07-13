@@ -37,12 +37,21 @@ let suppressNextClick = false;
 let settingsMountAttempts = 0;
 
 function boot() {
-    removeExistingUi();
-    injectStyle();
-    createPanel();
-    mountSettingsPanel();
-    applyFloatingEnabled(isFloatingEnabled());
-    bindPromptUpdates();
+    try {
+        console.log('[小冰块扩展] boot() 开始执行');
+        removeExistingUi();
+        injectStyle();
+        createPanel();
+        mountSettingsPanel();
+        applyFloatingEnabled(isFloatingEnabled());
+        bindPromptUpdates();
+        console.log('[小冰块扩展] boot() 完成，悬浮按钮已注入页面');
+    } catch (err) {
+        console.error('[小冰块扩展] boot() 失败:', err);
+        if (window.toastr?.error) {
+            window.toastr.error('小冰块扩展加载失败: ' + (err && err.message || err), '请查看控制台(F12)');
+        }
+    }
 }
 
 function createPanel() {
@@ -83,6 +92,7 @@ function createPanel() {
     `;
 
     document.body.appendChild(root);
+    console.log('[小冰块扩展] 面板已插入 DOM, root.id=' + root.id + ', body存在=' + !!document.body);
     searchInput = root.querySelector('.xbk-search');
     listNode = root.querySelector('.xbk-list');
     statsNode = root.querySelector('.xbk-stats');
@@ -107,10 +117,14 @@ function mountSettingsPanel() {
     if (!host) {
         if (settingsMountAttempts < 20) {
             settingsMountAttempts += 1;
+            console.warn('[小冰块扩展] 未找到 #extensions_settings，重试 ' + settingsMountAttempts + '/20');
             setTimeout(mountSettingsPanel, 250);
+        } else {
+            console.error('[小冰块扩展] 20次重试后仍未找到 #extensions_settings，设置面板无法挂载');
         }
         return;
     }
+    console.log('[小冰块扩展] 设置面板挂载点: ' + host.id || host.className);
 
     const panel = document.createElement('div');
     panel.id = SETTINGS_ID;
@@ -137,6 +151,14 @@ function mountSettingsPanel() {
     checkbox.checked = isFloatingEnabled();
     checkbox.addEventListener('change', () => {
         setFloatingEnabled(checkbox.checked);
+        console.log('[小冰块扩展] 用户切换悬浮窗: ' + (checkbox.checked ? '开启' : '关闭') + ', root存在=' + !!root);
+        if (checkbox.checked && root) {
+            const rect = root.getBoundingClientRect();
+            console.log('[小冰块扩展] 悬浮按钮位置: left=' + Math.round(rect.left) + ' top=' + Math.round(rect.top) + ' w=' + Math.round(rect.width) + ' h=' + Math.round(rect.height));
+            if (window.toastr?.info) {
+                window.toastr.info('悬浮窗已开启，❄按钮在屏幕左下角', '小冰块扩展');
+            }
+        }
     });
 }
 
@@ -215,6 +237,7 @@ function setFloatingEnabled(enabled) {
     const checkbox = document.querySelector('#xbk-enable-floating');
     if (checkbox) checkbox.checked = enabled;
     applyFloatingEnabled(enabled);
+    if (enabled) setOpen(true);
 }
 
 function applyFloatingEnabled(enabled) {
@@ -526,16 +549,20 @@ function injectStyle() {
     style.id = STYLE_ID;
     style.textContent = `
 #${ROOT_ID} {
+    --xbk-bg: rgba(18, 20, 27, 0.84);
     --xbk-bg: color-mix(in srgb, var(--SmartThemeBlurTintColor, rgba(18, 20, 27, 0.84)) 82%, transparent);
+    --xbk-card: rgba(25, 27, 36, 0.88);
     --xbk-card: color-mix(in srgb, var(--SmartThemeBlurTintColor, rgba(25, 27, 36, 0.88)) 88%, transparent);
     --xbk-line: var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
     --xbk-text: var(--SmartThemeBodyColor, #eef1f5);
+    --xbk-muted: rgba(238, 241, 245, 0.64);
     --xbk-muted: color-mix(in srgb, var(--SmartThemeBodyColor, #eef1f5) 64%, transparent);
     --xbk-accent: var(--SmartThemeQuoteColor, #9bd8ff);
     position: fixed;
     left: 28px;
+    bottom: 80px;
     bottom: 10dvh;
-    z-index: 2147483000;
+    z-index: 2147483647 !important;
     color: var(--xbk-text);
     font-family: var(--mainFontFamily, "Inter", "Microsoft YaHei", sans-serif);
     pointer-events: none;
@@ -570,6 +597,7 @@ function injectStyle() {
     height: 42px;
     border-radius: 50%;
     border: 1px solid var(--xbk-line);
+    background: rgba(18, 20, 27, 0.84);
     background: var(--xbk-bg);
     color: var(--xbk-text);
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.36);

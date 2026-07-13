@@ -1,12 +1,14 @@
 // ============================================================
 // ST-XiaoBingKuai floating preset panel
 // 排版与内容完全复刻预设内置悬浮窗（th-orb-v6-custom）
+// 含一键开启Claude/Gemini及互斥逻辑
 // ============================================================
 
 import {
     getAllPromptStates,
     onPromptStateChanged,
     togglePrompt,
+    setPromptEnabled,
 } from './presetBridge.js';
 
 const ROOT_ID = 'xbk-floating-panel';
@@ -23,7 +25,6 @@ const CLASS = {
 };
 
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
-// t=标题, i=条目列表{id=identifier, t=显示文本}, n=嵌套子分组
 const PANEL_DATA = {
   0: [
         {t:"写作设置",i:[{id:"2c096b4f-2283-48bd-8ca6-2e2fb048de8c",t:"语言默认简体中文"},{id:"3cc24793-e971-4cf7-a177-2917063f6b4f",t:"禁止医学词"},{id:"33083313-6d9d-456d-8229-fc2e601be087",t:"去除user中心"},{id:"f00f7f5c-65cc-4427-81b5-f04cfae1c57e",t:"请去工作/上学"},{id:"f86656e0-8f29-44ff-b231-2405282858b7",t:"不要总吃饭"},{id:"86efb125-5bfe-4a8b-9dbf-9c56d1aa7803",t:"古代世界@人间月下-海莉"},{id:"abfbfabe-ae03-404d-94da-7fb6d0ddffd7",t:"语言净化去“儿”音"},{id:"044e1f2e-c14f-4481-9581-8566499eb7bc",t:"反“然后”"},{id:"99255a68-65f7-407a-bbb2-8134443d2323",t:"反人机语言"},{id:"824c48a5-1732-448e-b367-46ec6464fc12",t:"角色信息差"},{id:"76c7e5d9-cd02-4c14-9628-07c7767c31ca",t:"防解释补充包"},{id:"e82e62a6-958d-44cd-8fc2-aec1a6ec1513",t:"建议开)视角确认"}],n:[
@@ -75,6 +76,12 @@ const PANEL_DATA = {
   ],
 };;
 
+// ── 一键开启互斥逻辑数据 ──
+const CLAUDE_SKIP_IDS = ["449877a9-d464-4562-a263-d28a2d5bbd8a","0956180f-b292-4e6e-a8c7-f6812338fab4"];
+const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","b5890d19-f6ef-4880-84b1-71188652f982","15b6968a-a2a2-46e9-953c-4a13cf806e86","8f3fd14d-eace-4910-a748-b13a1be7b968","c1160d81-e5e6-4e8b-a405-108dc17f3b75","61dd05b5-f310-4d84-8419-377214b8c4df"];
+const ALL_CLAUDE_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","a2a49518-7d3c-48de-87d2-ce796919241f","ad54cb24-1995-43ac-aaff-f6a681c781e7","17441f2f-0d3a-43f4-86e2-a77ed03b131f","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a"];
+const ALL_GEMINI_IDS = ["61c5dabf-c028-4588-a243-83e3403ae029","eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","7f764474-282b-401f-9765-ca794d6a8238","c8d921de-b2f0-4e1a-8226-ee4d1e686340","5dcb9682-d276-4093-b599-e305a239edf3","61dd05b5-f310-4d84-8419-377214b8c4df","c1160d81-e5e6-4e8b-a405-108dc17f3b75","15b6968a-a2a2-46e9-953c-4a13cf806e86","b5890d19-f6ef-4880-84b1-71188652f982","07832187-b2d4-4aa8-b135-9194ba17f70c","cc8ded6e-4eb9-4c49-b0ed-59ab8eb02e1a","8557e79e-6267-4cfc-a599-730eec400e10","252ec317-ca51-4bcc-bd3d-9b0e5e167a4e","8493af05-e821-4465-98ac-60861a30dc34","8c01ffc1-4839-48bb-aa8e-fd6e45822304","a7d5e545-a841-4b3f-8dc6-9f0061203035","23a2bd10-918d-4133-ace0-5bb15aeacbc4","8f3fd14d-eace-4910-a748-b13a1be7b968","85a64d71-8741-40bd-967b-5b7cec3c3df8","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d"];
+
 let root;
 let orb;
 let menu;
@@ -82,6 +89,37 @@ let settingsMountAttempts = 0;
 let promptStateMap = new Map();
 let activeCat = 0;
 let dragState = null;
+
+// ── 设备检测与默认定位 ────────────────────────────────────────
+function getDefaultPosition() {
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+    const isMobile = window.innerWidth <= 768 || isIOS || isAndroid;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (isIOS) {
+        // iOS: 右下角，避开底部安全区域
+        return { x: w - 60, y: h - 100 - (safeAreaInset('bottom') || 0) };
+    }
+    if (isAndroid) {
+        // Android: 右下角
+        return { x: w - 60, y: h - 90 };
+    }
+    if (isMobile) {
+        // 其他手机: 右下角
+        return { x: w - 60, y: h - 90 };
+    }
+    // 电脑: 左侧中部
+    return { x: 40, y: 160 };
+}
+
+function safeAreaInset(side) {
+    try {
+        const env = getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-' + side + ')');
+        return parseInt(env, 10) || 0;
+    } catch (_) { return 0; }
+}
 
 // ── 启动 ──────────────────────────────────────────────────────
 function boot() {
@@ -108,9 +146,8 @@ function createPanel() {
     root.id = ROOT_ID;
 
     const pos = loadJson(STORAGE.position, null);
-    const isMobile = window.innerWidth <= 768;
-    let x = isMobile ? window.innerWidth - 60 : 40;
-    let y = isMobile ? window.innerHeight - 120 : 160;
+    const def = getDefaultPosition();
+    let x = def.x, y = def.y;
     if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
         x = clamp(pos.x, 4, Math.max(4, window.innerWidth - 52));
         y = clamp(pos.y, 4, Math.max(4, window.innerHeight - 52));
@@ -147,8 +184,6 @@ function createPanel() {
         '</div>';
 
     document.body.appendChild(root);
-    console.log('[小冰块扩展] 面板已插入 DOM, root.id=' + root.id);
-
     orb = root.querySelector('#' + ROOT_ID + '-orb');
     menu = root.querySelector('#' + ROOT_ID + '-menu');
 
@@ -157,7 +192,7 @@ function createPanel() {
     refreshPanel();
 }
 
-// ── 渲染列表（完全复刻预设悬浮窗结构） ────────────────────────
+// ── 渲染列表 ──────────────────────────────────────────────────
 function renderList() {
     const listEl = root.querySelector('#' + ROOT_ID + '-list');
     if (!listEl) return;
@@ -167,11 +202,22 @@ function renderList() {
     for (let i = 0; i < 3; i++) {
         const display = i === activeCat ? '' : ' style="display:none;"';
         html += '<div class="cat-list cat-list-' + i + '" data-cat="' + i + '"' + display + '>';
+        if (i === 1) {
+            html += '<div class="grid-toggles col-1" style="padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2px;">' +
+                '<div class="menu-item-toggle btn-full" id="' + ROOT_ID + '-claude-all-on"><div class="menu-item-text">⚡ 一键开启全部Claude</div><div class="toggle-led"></div></div>' +
+                '</div>';
+        }
+        if (i === 2) {
+            html += '<div class="grid-toggles col-1" style="padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2px;">' +
+                '<div class="menu-item-toggle btn-full" id="' + ROOT_ID + '-gemini-all-on"><div class="menu-item-text">⚡ 一键开启全部Gemini</div><div class="toggle-led"></div></div>' +
+                '</div>';
+        }
         html += renderGroups(cats[i]);
         html += '</div>';
     }
     listEl.innerHTML = html;
     syncButtonStates();
+    syncAllOnButtons();
 }
 
 function renderGroups(groups) {
@@ -202,17 +248,80 @@ function renderItems(items) {
     for (const item of items) {
         html += '<div class="menu-item-toggle" data-identifier="' + escapeHtml(item.id) + '" title="' + escapeHtml(item.t) + '">' +
             '<div class="menu-item-text">' + escapeHtml(item.t) + '</div>' +
-            '<div class="toggle-led"></div>' +
-        '</div>';
+            '<div class="toggle-led"></div></div>';
     }
     return html;
 }
 
+// ── 一键开启逻辑 ──────────────────────────────────────────────
+function isAllOnActive(buttonId) {
+    const btn = root.querySelector('#' + buttonId);
+    return btn && btn.classList.contains('is-on');
+}
+
+function syncAllOnButtons() {
+    if (!root) return;
+    const claudeBtn = root.querySelector('#' + ROOT_ID + '-claude-all-on');
+    const geminiBtn = root.querySelector('#' + ROOT_ID + '-gemini-all-on');
+    // 检查是否所有非跳过的Claude条目都开着
+    if (claudeBtn) {
+        const allClaudeOn = ALL_CLAUDE_IDS.filter(id => !CLAUDE_SKIP_IDS.includes(id)).every(id => promptStateMap.get(id) === true);
+        claudeBtn.classList.toggle('is-on', allClaudeOn);
+    }
+    if (geminiBtn) {
+        const allGeminiOn = ALL_GEMINI_IDS.filter(id => !GEMINI_SKIP_IDS.includes(id)).every(id => promptStateMap.get(id) === true);
+        geminiBtn.classList.toggle('is-on', allGeminiOn);
+    }
+}
+
+function handleClaudeAllOn() {
+    const btn = root.querySelector('#' + ROOT_ID + '-claude-all-on');
+    if (!btn) return;
+    const turnOn = !btn.classList.contains('is-on');
+
+    if (turnOn) {
+        // 开启所有Claude（跳过暗黑森林和小克破限）
+        ALL_CLAUDE_IDS.forEach(function(id) {
+            if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(id, true);
+        });
+        // 关闭所有Gemini
+        ALL_GEMINI_IDS.forEach(function(id) { setPromptEnabled(id, false); });
+    } else {
+        // 关闭所有Claude（跳过暗黑森林和小克破限）
+        ALL_CLAUDE_IDS.forEach(function(id) {
+            if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(id, false);
+        });
+    }
+    setTimeout(function() { refreshPanel(); }, 100);
+}
+
+function handleGeminiAllOn() {
+    const btn = root.querySelector('#' + ROOT_ID + '-gemini-all-on');
+    if (!btn) return;
+    const turnOn = !btn.classList.contains('is-on');
+
+    if (turnOn) {
+        // 开启所有Gemini（跳过指定条目）
+        ALL_GEMINI_IDS.forEach(function(id) {
+            if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(id, true);
+        });
+        // 关闭所有Claude
+        ALL_CLAUDE_IDS.forEach(function(id) { setPromptEnabled(id, false); });
+    } else {
+        // 关闭所有Gemini（跳过指定条目）
+        ALL_GEMINI_IDS.forEach(function(id) {
+            if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(id, false);
+        });
+    }
+    setTimeout(function() { refreshPanel(); }, 100);
+}
+
 // ── 状态同步 ──────────────────────────────────────────────────
 function refreshPanel() {
-    promptStateMap = new Map(getAllPromptStates().map(item => [item.identifier, item.enabled]));
+    promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
     renderList();
     syncButtonStates();
+    syncAllOnButtons();
 }
 
 function syncButtonStates() {
@@ -260,12 +369,6 @@ function mountSettingsPanel() {
     checkbox.checked = isFloatingEnabled();
     checkbox.addEventListener('change', function() {
         setFloatingEnabled(checkbox.checked);
-        if (checkbox.checked && root) {
-            const rect = root.getBoundingClientRect();
-            if (window.toastr?.info) {
-                window.toastr.info('悬浮窗已开启，❄按钮在屏幕' + Math.round(rect.left) + ',' + Math.round(rect.top) + '处', '小冰块扩展');
-            }
-        }
     });
 }
 
@@ -274,34 +377,39 @@ function removeExistingUi() {
     document.getElementById(ROOT_ID)?.remove();
     document.getElementById(SETTINGS_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
-    root = null;
-    orb = null;
-    menu = null;
+    root = null; orb = null; menu = null;
 }
 
 // ── 事件绑定 ──────────────────────────────────────────────────
 function bindPanelEvents() {
-    const btnClose = root.querySelector('#' + ROOT_ID + '-close');
-    btnClose.addEventListener('click', function(e) {
-        e.stopPropagation();
-        closeMenu();
+    root.querySelector('#' + ROOT_ID + '-close').addEventListener('click', function(e) {
+        e.stopPropagation(); closeMenu();
     });
 
-    const tabs = root.querySelector('#' + ROOT_ID + '-tabs');
-    tabs.addEventListener('click', function(e) {
+    root.querySelector('#' + ROOT_ID + '-tabs').addEventListener('click', function(e) {
         const tab = e.target.closest('.category-tab');
         if (!tab) return;
         activeCat = Number(tab.dataset.cat);
-        tabs.querySelectorAll('.category-tab').forEach(function(t) {
-            t.classList.toggle('active', t === tab);
-        });
+        root.querySelectorAll('.category-tab').forEach(function(t) { t.classList.toggle('active', t === tab); });
         root.querySelectorAll('.cat-list').forEach(function(cl) {
             cl.style.display = Number(cl.dataset.cat) === activeCat ? '' : 'none';
         });
     });
 
     root.addEventListener('click', function(e) {
-        const btn = e.target.closest('.menu-item-toggle');
+        // 一键开启按钮
+        if (e.target.closest('#' + ROOT_ID + '-claude-all-on')) {
+            e.stopPropagation();
+            handleClaudeAllOn();
+            return;
+        }
+        if (e.target.closest('#' + ROOT_ID + '-gemini-all-on')) {
+            e.stopPropagation();
+            handleGeminiAllOn();
+            return;
+        }
+        // 普通条目切换
+        const btn = e.target.closest('.menu-item-toggle[data-identifier]');
         if (!btn) return;
         const id = btn.dataset.identifier;
         if (!id) return;
@@ -319,6 +427,7 @@ function bindPromptUpdates() {
     onPromptStateChanged(function(states) {
         promptStateMap = new Map(states.map(function(item) { return [item.identifier, item.enabled]; }));
         syncButtonStates();
+        syncAllOnButtons();
     });
 }
 
@@ -332,7 +441,7 @@ function setFloatingEnabled(enabled) {
     const checkbox = document.querySelector('#xbk-enable-floating');
     if (checkbox) checkbox.checked = enabled;
     applyFloatingEnabled(enabled);
-    if (enabled) openMenu();
+    // 不自动展开面板，只显示/隐藏按钮
 }
 
 function applyFloatingEnabled(enabled) {
@@ -368,28 +477,21 @@ function updateMenuDirection() {
     const orbX = parseInt(root.style.left, 10) || 0;
     const orbY = parseInt(root.style.top, 10) || 0;
     const menuH = 480;
-    if (orbX < window.innerWidth / 2) {
-        menu.style.left = '0';
-        menu.style.right = 'auto';
-    } else {
-        menu.style.left = 'auto';
-        menu.style.right = '0';
-    }
+    if (orbX < window.innerWidth / 2) { menu.style.left = '0'; menu.style.right = 'auto'; }
+    else { menu.style.left = 'auto'; menu.style.right = '0'; }
     const spaceBelow = window.innerHeight - orbY - 60;
     if (spaceBelow < menuH && orbY > menuH / 2) {
-        menu.style.top = 'auto';
-        menu.style.bottom = '52px';
+        menu.style.top = 'auto'; menu.style.bottom = '52px';
         root.classList.add(CLASS.openUp);
         menu.style.transformOrigin = orbX < window.innerWidth / 2 ? 'bottom left' : 'bottom right';
     } else {
-        menu.style.top = '52px';
-        menu.style.bottom = 'auto';
+        menu.style.top = '52px'; menu.style.bottom = 'auto';
         root.classList.remove(CLASS.openUp);
         menu.style.transformOrigin = orbX < window.innerWidth / 2 ? 'top left' : 'top right';
     }
 }
 
-// ── 拖拽（鼠标+触摸，完全适配手机） ────────────────────────────
+// ── 拖拽 ──────────────────────────────────────────────────────
 function enableDragging() {
     const head = root.querySelector('#' + ROOT_ID + '-head');
     const DRAG_THRESHOLD = 4;
@@ -402,17 +504,12 @@ function enableDragging() {
         dragMask.style.cssText = 'position:fixed;inset:0;z-index:2147483639;cursor:grabbing;background:transparent;';
         document.body.appendChild(dragMask);
     }
-    function removeMask() {
-        dragMask?.remove();
-        dragMask = null;
-    }
+    function removeMask() { dragMask?.remove(); dragMask = null; }
     function startDrag(cx, cy) {
         dragState = { moved: false, sx: cx, sy: cy };
         const rect = root.getBoundingClientRect();
-        dragState.ox = cx - rect.left;
-        dragState.oy = cy - rect.top;
-        root.style.transition = 'none';
-        createMask();
+        dragState.ox = cx - rect.left; dragState.oy = cy - rect.top;
+        root.style.transition = 'none'; createMask();
     }
     function moveDrag(cx, cy) {
         if (!dragState) return;
@@ -423,8 +520,7 @@ function enableDragging() {
     }
     function endDrag() {
         if (!dragState) return;
-        root.style.transition = '';
-        removeMask();
+        root.style.transition = ''; removeMask();
         if (dragState.moved) savePos();
         dragState = null;
     }
@@ -435,57 +531,29 @@ function enableDragging() {
     }
 
     orb.addEventListener('mousedown', function(e) { startDrag(e.clientX, e.clientY); e.preventDefault(); });
-    head.addEventListener('mousedown', function(e) {
-        if (isInteractive(e)) return;
-        startDrag(e.clientX, e.clientY);
-        e.preventDefault();
-    });
+    head.addEventListener('mousedown', function(e) { if (isInteractive(e)) return; startDrag(e.clientX, e.clientY); e.preventDefault(); });
     document.addEventListener('mousemove', function(e) { moveDrag(e.clientX, e.clientY); });
     document.addEventListener('mouseup', endDrag);
-    orb.addEventListener('click', function() {
-        if (dragState && dragState.moved) return;
-        toggleMenu();
-    });
+    orb.addEventListener('click', function() { if (dragState && dragState.moved) return; toggleMenu(); });
 
     orb.addEventListener('touchstart', function(e) { startDrag(e.touches[0].clientX, e.touches[0].clientY); e.stopPropagation(); }, { passive: true });
     orb.addEventListener('touchmove', function(e) { if (!dragState) return; moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-    orb.addEventListener('touchend', function(e) {
-        var wasMoved = dragState && dragState.moved;
-        endDrag();
-        if (!wasMoved) toggleMenu();
-        e.stopPropagation();
-        e.preventDefault();
-    }, { passive: false });
-    head.addEventListener('touchstart', function(e) {
-        if (isInteractive(e)) return;
-        startDrag(e.touches[0].clientX, e.touches[0].clientY);
-        e.stopPropagation();
-    }, { passive: true });
+    orb.addEventListener('touchend', function(e) { var w = dragState && dragState.moved; endDrag(); if (!w) toggleMenu(); e.stopPropagation(); e.preventDefault(); }, { passive: false });
+    head.addEventListener('touchstart', function(e) { if (isInteractive(e)) return; startDrag(e.touches[0].clientX, e.touches[0].clientY); e.stopPropagation(); }, { passive: true });
     head.addEventListener('touchmove', function(e) { if (!dragState) return; moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
     head.addEventListener('touchend', function(e) { endDrag(); e.stopPropagation(); }, { passive: false });
 }
 
 function savePos() {
-    const x = parseInt(root.style.left, 10) || 0;
-    const y = parseInt(root.style.top, 10) || 0;
-    localStorage.setItem(STORAGE.position, JSON.stringify({ x: x, y: y }));
+    localStorage.setItem(STORAGE.position, JSON.stringify({ x: parseInt(root.style.left, 10) || 0, y: parseInt(root.style.top, 10) || 0 }));
 }
 
-// ── 工具函数 ──────────────────────────────────────────────────
-function loadJson(key, fallback) {
-    try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-    } catch (_) { return fallback; }
-}
+// ── 工具 ──────────────────────────────────────────────────────
+function loadJson(key, fallback) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (_) { return fallback; } }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-function escapeHtml(v) {
-    return String(v ?? '').replace(/[&<>"']/g, function(c) {
-        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
-    });
-}
+function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, function(c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
 
-// ── 样式表（完全复刻预设悬浮窗 th-orb-v6-custom） ──────────────
+// ── 样式表 ────────────────────────────────────────────────────
 function injectStyle() {
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
@@ -502,61 +570,25 @@ function injectStyle() {
 '    0%, 100% { text-shadow: 0 0 4px rgba(217,119,87,0.3), 0 0 8px rgba(96,185,200,0.15), 0 0 14px rgba(217,119,87,0.08); }',
 '    50% { text-shadow: 0 0 8px rgba(217,119,87,0.45), 0 0 16px rgba(96,185,200,0.25), 0 0 24px rgba(217,119,87,0.12); }',
 '}',
-'#' + ROOT_ID + ' .orb {',
-'    position: absolute; top: 0; left: 0; width: 48px; height: 48px;',
-'    border-radius: 8px; cursor: pointer; z-index: 2; background: transparent;',
-'    display: flex; align-items: center; justify-content: center;',
-'    transition: background 0.2s ease;',
-'}',
+'#' + ROOT_ID + ' .orb { position: absolute; top: 0; left: 0; width: 48px; height: 48px; border-radius: 8px; cursor: pointer; z-index: 2; background: transparent; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; }',
 '#' + ROOT_ID + ' .orb:hover { background: rgba(255,255,255,0.05); }',
-'#' + ROOT_ID + ' .orb-icon {',
-'    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);',
-'    display: block; animation: xbk-orbBreathe 2.5s ease-in-out infinite;',
-'}',
+'#' + ROOT_ID + ' .orb-icon { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); display: block; animation: xbk-orbBreathe 2.5s ease-in-out infinite; }',
 '#' + ROOT_ID + ' .orb:hover .orb-icon { transform: scale(1.15); }',
 '#' + ROOT_ID + '.open .orb-icon { transform: rotate(90deg) scale(1.1); }',
-'#' + ROOT_ID + ' .menu {',
-'    position: absolute; width: 340px; pointer-events: none;',
-'    transform: scale(0.95) translateY(-4px); opacity: 0;',
-'    transition: transform 0.2s cubic-bezier(0.34,1.3,0.64,1), opacity 0.15s ease;',
-'}',
+'#' + ROOT_ID + ' .menu { position: absolute; width: 340px; pointer-events: none; transform: scale(0.95) translateY(-4px); opacity: 0; transition: transform 0.2s cubic-bezier(0.34,1.3,0.64,1), opacity 0.15s ease; }',
 '@media (max-width: 768px) { #' + ROOT_ID + ' .menu { width: calc(100vw - 24px); max-width: 340px; } }',
 '#' + ROOT_ID + '.open .menu { pointer-events: all; transform: scale(1) translateY(0); opacity: 1; }',
 '#' + ROOT_ID + '.open-up .menu { transform: scale(0.95) translateY(4px); }',
 '#' + ROOT_ID + '.open.open-up .menu { transform: scale(1) translateY(0); }',
-'#' + ROOT_ID + ' .menu-shell {',
-'    border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden;',
-'    box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);',
-'    background: rgba(22,22,22,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);',
-'    position: relative;',
-'}',
-'#' + ROOT_ID + ' .menu-head {',
-'    display: flex; align-items: center; gap: 8px; padding: 12px 14px;',
-'    background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.06);',
-'    cursor: grab; flex-shrink: 0;',
-'}',
+'#' + ROOT_ID + ' .menu-shell { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); background: rgba(22,22,22,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); position: relative; }',
+'#' + ROOT_ID + ' .menu-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.06); cursor: grab; flex-shrink: 0; }',
 '#' + ROOT_ID + ' .menu-head:active { cursor: grabbing; }',
 '#' + ROOT_ID + ' .menu-title-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }',
-'#' + ROOT_ID + ' .menu-title {',
-'    font-size: 13px; font-weight: bold; color: #eeeeee;',
-'    letter-spacing: 0.05em; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.8);',
-'}',
-'#' + ROOT_ID + ' .menu-close {',
-'    width: 22px; height: 22px; border-radius: 4px; border: none;',
-'    background: transparent; color: rgba(255,255,255,0.5); cursor: pointer;',
-'    display: flex; align-items: center; justify-content: center; font-size: 14px;',
-'    transition: all 0.15s; padding: 0;',
-'}',
+'#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: #eeeeee; letter-spacing: 0.05em; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }',
+'#' + ROOT_ID + ' .menu-close { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; padding: 0; }',
 '#' + ROOT_ID + ' .menu-close:hover { background: rgba(255,255,255,0.1); color: #fff; }',
-'#' + ROOT_ID + ' .category-tabs {',
-'    display: flex; gap: 0; padding: 6px 8px;',
-'    border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.12); flex-shrink: 0;',
-'}',
-'#' + ROOT_ID + ' .category-tab {',
-'    flex: 1; text-align: center; padding: 5px 0; font-size: 11px; cursor: pointer;',
-'    border-radius: 5px; transition: all 0.18s; color: rgba(255,255,255,0.4);',
-'    font-weight: 500; margin: 0 2px; user-select: none;',
-'}',
+'#' + ROOT_ID + ' .category-tabs { display: flex; gap: 0; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.12); flex-shrink: 0; }',
+'#' + ROOT_ID + ' .category-tab { flex: 1; text-align: center; padding: 5px 0; font-size: 11px; cursor: pointer; border-radius: 5px; transition: all 0.18s; color: rgba(255,255,255,0.4); font-weight: 500; margin: 0 2px; user-select: none; }',
 '#' + ROOT_ID + ' .category-tab:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); }',
 '#' + ROOT_ID + ' .category-tab.cat-1:hover { background: rgba(64,140,255,0.1); color: #6db3ff; }',
 '#' + ROOT_ID + ' .category-tab.cat-2:hover { background: rgba(230,60,60,0.1); color: #ff7070; }',
@@ -564,74 +596,41 @@ function injectStyle() {
 '#' + ROOT_ID + ' .category-tab.cat-0.active { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.95); }',
 '#' + ROOT_ID + ' .category-tab.cat-1.active { background: rgba(40,120,255,0.22); color: #4d9fff; }',
 '#' + ROOT_ID + ' .category-tab.cat-2.active { background: rgba(220,40,40,0.22); color: #ff6b6b; }',
-'#' + ROOT_ID + ' .menu-list {',
-'    padding: 8px 8px 42px 8px; display: flex; flex-direction: column; gap: 4px;',
-'    overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;',
-'    max-height: 65vh;',
-'}',
+'#' + ROOT_ID + ' .menu-list { padding: 8px 8px 42px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; max-height: 65vh; }',
 '@media (max-width: 768px) { #' + ROOT_ID + ' .menu-list { max-height: 55vh; } }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar { width: 4px; }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }',
 '#' + ROOT_ID + ' details { margin-bottom: 2px; }',
-'#' + ROOT_ID + ' summary {',
-'    font-size: 11.5px; font-weight: bold; color: rgba(255,255,255,0.8);',
-'    padding: 8px 10px; background: rgba(0,0,0,0.15); border-radius: 6px;',
-'    cursor: pointer; list-style: none; user-select: none;',
-'    display: flex; justify-content: space-between; align-items: center;',
-'    text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;',
-'}',
+'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: rgba(255,255,255,0.8); padding: 8px 10px; background: rgba(0,0,0,0.15); border-radius: 6px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; }',
 '#' + ROOT_ID + ' summary:hover { background: rgba(255,255,255,0.05); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
 '#' + ROOT_ID + ' .details-content { padding: 8px 0 4px 0; display: flex; flex-direction: column; gap: 6px; }',
-'#' + ROOT_ID + ' .nested-details {',
-'    margin-left: 4px; border-left: 2px solid rgba(255,255,255,0.08);',
-'    padding-left: 6px; margin-bottom: 4px;',
-'}',
-'#' + ROOT_ID + ' .nested-details summary {',
-'    background: rgba(255,255,255,0.06); font-size: 10.5px; color: rgba(255,255,255,0.7);',
-'    padding: 6px 10px; border-radius: 4px;',
-'}',
+'#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 2px solid rgba(255,255,255,0.08); padding-left: 6px; margin-bottom: 4px; }',
+'#' + ROOT_ID + ' .nested-details summary { background: rgba(255,255,255,0.06); font-size: 10.5px; color: rgba(255,255,255,0.7); padding: 6px 10px; border-radius: 4px; }',
 '#' + ROOT_ID + ' .nested-details summary:hover { background: rgba(255,255,255,0.12); }',
 '#' + ROOT_ID + ' .nested-details .details-content { padding: 6px 0 4px 4px; }',
 '.grid-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 4px; }',
-'#' + ROOT_ID + ' .menu-item-toggle {',
-'    display: flex; align-items: center; justify-content: space-between;',
-'    height: 28px; padding: 0 8px; border-radius: 6px; box-sizing: border-box;',
-'    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);',
-'    cursor: pointer; transition: all 0.15s ease; margin: 0;',
-'}',
+'.grid-toggles.col-1 { grid-template-columns: 1fr; }',
+'#' + ROOT_ID + ' .menu-item-toggle { display: flex; align-items: center; justify-content: space-between; height: 28px; padding: 0 8px; border-radius: 6px; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: all 0.15s ease; margin: 0; }',
 '#' + ROOT_ID + ' .menu-item-toggle:hover { background: rgba(255,255,255,0.08); }',
-'#' + ROOT_ID + ' .menu-item-text {',
-'    font-size: 11px; color: rgba(255,255,255,0.7); white-space: nowrap;',
-'    line-height: 1; margin-top: 1px; overflow: hidden; text-overflow: ellipsis;',
-'}',
-'#' + ROOT_ID + ' .toggle-led {',
-'    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;',
-'    background: rgba(255,255,255,0.15); transition: all 0.2s ease;',
-'    border: 1px solid rgba(0,0,0,0.5); margin-left: 4px;',
-'}',
+'#' + ROOT_ID + ' .menu-item-text { font-size: 11px; color: rgba(255,255,255,0.7); white-space: nowrap; line-height: 1; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; }',
+'#' + ROOT_ID + ' .toggle-led { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: rgba(255,255,255,0.15); transition: all 0.2s ease; border: 1px solid rgba(0,0,0,0.5); margin-left: 4px; }',
 '#' + ROOT_ID + ' .menu-item-toggle.is-on { background: rgba(96,185,200,0.15); border-color: rgba(96,185,200,0.4); }',
 '#' + ROOT_ID + ' .menu-item-toggle.is-on .menu-item-text { color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }',
 '#' + ROOT_ID + ' .menu-item-toggle.is-on .toggle-led { background: #60b9c8; box-shadow: 0 0 6px #60b9c8; border-color: transparent; }',
-'#' + ROOT_ID + ' .menu-foot {',
-'    position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;',
-'    display: flex; justify-content: space-between; align-items: center;',
-'    padding: 12px 16px 13px; font-size: 10px; color: rgba(255,255,255,0.5);',
-'    background: rgba(0,0,0,0.88); pointer-events: none; letter-spacing: 0.04em;',
-'}',
-'#' + ROOT_ID + ' .fox-link {',
-'    cursor: pointer; color: rgba(96,185,200,0.6); font-weight: bold; letter-spacing: 0.5px;',
-'    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); font-size: 10px;',
-'}',
+'#' + ROOT_ID + ' .btn-full { grid-column: 1 / -1; justify-content: center; background: rgba(232,176,114,0.05); gap: 6px; border-color: rgba(232,176,114,0.2); }',
+'#' + ROOT_ID + ' .btn-full .menu-item-text { font-size: 12px; font-weight: bold; color: #e8b072; margin-top: 0; }',
+'#' + ROOT_ID + ' .btn-full.is-on { background: rgba(232,176,114,0.2); border-color: rgba(232,176,114,0.5); }',
+'#' + ROOT_ID + ' .btn-full.is-on .menu-item-text { color: #ffd6a5; }',
+'#' + ROOT_ID + ' .btn-full.is-on .toggle-led { background: #e8b072; box-shadow: 0 0 6px #e8b072; border-color: transparent; }',
+'#' + ROOT_ID + ' .menu-foot { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 13px; font-size: 10px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.88); pointer-events: none; letter-spacing: 0.04em; }',
+'#' + ROOT_ID + ' .fox-link { cursor: pointer; color: rgba(96,185,200,0.6); font-weight: bold; letter-spacing: 0.5px; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); font-size: 10px; }',
 '#' + ROOT_ID + ' .fox-link:hover { color: #e8b072; text-shadow: 0 0 8px rgba(232,176,114,0.8); transform: scale(1.08); }',
 '@keyframes xbk-orb-in { from { opacity:0; transform: scale(0.5); } to { opacity:1; transform: scale(1); } }',
 '#' + ROOT_ID + ' { animation: xbk-orb-in 0.2s cubic-bezier(0.34,1.3,0.64,1) both; }',
 '#' + SETTINGS_ID + ' { margin: 10px 0; }',
-'#' + SETTINGS_ID + ' .xbk-settings-card {',
-'    border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.18));',
-'    border-radius: 8px; padding: 10px 12px; background: rgba(30,32,40,0.45);',
-'}',
+'#' + SETTINGS_ID + ' .xbk-settings-card { border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.18)); border-radius: 8px; padding: 10px 12px; background: rgba(30,32,40,0.45); }',
 '#' + SETTINGS_ID + ' .xbk-settings-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }',
 '#' + SETTINGS_ID + ' .xbk-settings-title { color: var(--SmartThemeBodyColor, inherit); font-weight: 700; line-height: 1.2; }',
 '#' + SETTINGS_ID + ' .xbk-settings-subtitle { margin-top: 2px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.62; font-size: 0.82em; }',
@@ -643,7 +642,6 @@ function injectStyle() {
     document.head.appendChild(style);
 }
 
-// ── 启动入口 ──────────────────────────────────────────────────
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot, { once: true });
 } else {

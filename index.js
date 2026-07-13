@@ -211,6 +211,7 @@ function renderItems(items) {
 // ── 状态同步 ──────────────────────────────────────────────────
 function refreshPanel() {
     promptStateMap = new Map(getAllPromptStates().map(item => [item.identifier, item.enabled]));
+    renderList();
     syncButtonStates();
 }
 

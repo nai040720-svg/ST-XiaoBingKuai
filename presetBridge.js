@@ -145,7 +145,6 @@ function notifyStateChanged() {
 // 监听 ST 事件，自动通知悬浮窗
 const watchedEvents = [
     event_types?.CHATCOMPLETION_MODEL_CHANGED,
-    event_types?.OAI_PRESET_CHANGED_AFTER,
     event_types?.CHAT_LOADED,
     event_types?.CHARACTER_EDITED,
 ].filter(Boolean);
@@ -155,3 +154,10 @@ watchedEvents.forEach(type => {
         setTimeout(notifyStateChanged, 100);
     });
 });
+
+// 预设切换事件单独处理：延迟更久确保新预设数据已完全加载
+if (event_types?.OAI_PRESET_CHANGED_AFTER) {
+    eventSource.on(event_types.OAI_PRESET_CHANGED_AFTER, () => {
+        setTimeout(notifyStateChanged, 300);
+    });
+}

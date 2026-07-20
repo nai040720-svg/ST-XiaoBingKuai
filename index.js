@@ -649,16 +649,17 @@ function injectStyle() {
 '@media (max-width: 768px) { #' + ROOT_ID + ' .menu-list { max-height: 55vh; } }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar { width: 4px; }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar-thumb { background: var(--SmartThemeBorderColor); border-radius: 4px; }',
-'#' + ROOT_ID + ' details { margin-bottom: 2px; }',
-// ── 分组标题：直接使用 ST 主题背景变量，不写死渐变 ──
-'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 10px; background: var(--SmartThemeBlurTintColor); border: 1px solid var(--SmartThemeBorderColor); border-radius: 10px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
+'#' + ROOT_ID + ' details { margin-bottom: 2px; border: 1px solid var(--SmartThemeQuoteColor); border-radius: 8px; overflow: hidden; }',
+'#' + ROOT_ID + ' details[open] { box-shadow: 0 0 6px color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, transparent); }',
+// ── 分组标题：使用强调色边框区分，文字左移留空避免与框融为一体 ──
+'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 14px 8px 12px; background: var(--SmartThemeBlurTintColor); border: none; border-left: 3px solid var(--SmartThemeQuoteColor); border-radius: 8px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
 '#' + ROOT_ID + ' summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
-'#' + ROOT_ID + ' .details-content { padding: 8px 0 4px 0; display: flex; flex-direction: column; gap: 6px; }',
-// ── 左边框色条：使用 ST 强调色 QuoteColor，与背景区分 ──
+'#' + ROOT_ID + ' .details-content { padding: 8px 6px 6px 6px; display: flex; flex-direction: column; gap: 6px; }',
+// ── 子分组：同样使用强调色外框 ──
 '#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 3px solid var(--SmartThemeQuoteColor); padding-left: 6px; margin-bottom: 4px; }',
-'#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--SmartThemeBorderColor); }',
+'#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 12px 6px 10px; border-radius: 4px; border: none; border-left: 2px solid var(--SmartThemeQuoteColor); }',
 '#' + ROOT_ID + ' .nested-details summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' .nested-details .details-content { padding: 6px 0 4px 4px; }',
 '.grid-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 4px; }',

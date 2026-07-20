@@ -231,7 +231,7 @@ function renderList() {
 function renderGroups(groups) {
     let html = '';
     for (const g of groups) {
-        html += '<details open><summary>' + escapeHtml(g.t) + '</summary>';
+        html += '<details><summary>' + escapeHtml(g.t) + '</summary>';
         html += '<div class="details-content">';
         if (g.i && g.i.length > 0) {
             html += '<div class="grid-toggles">' + renderItems(g.i) + '</div>';
@@ -493,9 +493,6 @@ function openMenu() {
     root.classList.add(CLASS.open);
     // 只同步状态，不重新渲染（避免分组关闭和卡顿）
     syncMenuState();
-    setTimeout(function() {
-        root.querySelectorAll('.cat-list details').forEach(function(d) { d.open = true; });
-    }, 80);
 }
 
 // 同步菜单状态：带重试机制，确保切换预设后数据已加载
@@ -658,8 +655,8 @@ function injectStyle() {
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
 '#' + ROOT_ID + ' .details-content { padding: 8px 10px 8px 10px; display: flex; flex-direction: column; gap: 6px; }',
-// ── 子分组：保留总包裹框，去掉标题左竖线 ──
-'#' + ROOT_ID + ' .nested-details { margin-left: 10px; margin-right: 2px; border: 1px solid var(--SmartThemeQuoteColor); border-left: 3px solid var(--SmartThemeQuoteColor); border-radius: 6px; padding-left: 8px; margin-bottom: 4px; overflow: hidden; }',
+// ── 子分组：保留总包裹框，四边统一粗细，去掉标题左竖线 ──
+'#' + ROOT_ID + ' .nested-details { margin-left: 10px; margin-right: 2px; border: 1px solid var(--SmartThemeQuoteColor); border-radius: 6px; padding: 0; margin-bottom: 4px; overflow: hidden; }',
 '#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 12px 6px 10px; border-radius: 4px; border: none; }',
 '#' + ROOT_ID + ' .nested-details summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' .nested-details .details-content { padding: 6px 0 4px 4px; }',

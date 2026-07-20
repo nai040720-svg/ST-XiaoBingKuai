@@ -649,9 +649,10 @@ function injectStyle() {
 // ── 大分类：无外框，标题微微突出 ──
 '#' + ROOT_ID + ' details:not(.nested-details) { margin-bottom: 4px; border: none; border-radius: 0; overflow: visible; }',
 '#' + ROOT_ID + ' details:not(.nested-details)[open] { box-shadow: none; }',
-// ── 大分类标题：去掉竖线，用微妙的背景色突出 ──
-'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 14px 8px 12px; background: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, var(--SmartThemeBlurTintColor)); border: none; border-radius: 6px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
-'#' + ROOT_ID + ' summary:hover { filter: brightness(150%); }',
+// ── 大分类标题：立体突出感 ──
+'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 14px 8px 12px; background: var(--SmartThemeBlurTintColor); border: none; border-radius: 6px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08); }',
+'#' + ROOT_ID + ' summary:hover { transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1); }',
+'#' + ROOT_ID + ' summary:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
 '#' + ROOT_ID + ' .details-content { padding: 8px 4px 6px 4px; display: flex; flex-direction: column; gap: 6px; }',

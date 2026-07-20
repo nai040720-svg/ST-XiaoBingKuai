@@ -623,12 +623,12 @@ function injectStyle() {
 '#' + ROOT_ID + '.open-up .menu { transform: translateY(6px); }',
 '#' + ROOT_ID + '.open.open-up .menu { transform: translateY(0); }',
 // ── 主面板外壳：完全复刻 ST #sheld / .menu_button 配色 ──
-'#' + ROOT_ID + ' .menu-shell { border: 1px solid var(--SmartThemeBorderColor) !important; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px var(--SmartThemeShadowColor), inset 0 1px 0 rgba(255,255,255,0.05); background: var(--SmartThemeBlurTintColor) !important; backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); position: relative; }',
+'#' + ROOT_ID + ' .menu-shell { border: 1px solid var(--SmartThemeBorderColor) !important; border-radius: 12px; overflow: hidden; background: var(--SmartThemeBlurTintColor) !important; backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); position: relative; }',
 // ── 顶栏：直接使用 ST 主题背景变量，不写死渐变 ──
 '#' + ROOT_ID + ' .menu-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--SmartThemeBlurTintColor); border-bottom: 1px solid var(--SmartThemeBorderColor) !important; cursor: grab; flex-shrink: 0; }',
 '#' + ROOT_ID + ' .menu-head:active { cursor: grabbing; }',
 '#' + ROOT_ID + ' .menu-title-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }',
-'#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; letter-spacing: 0.05em; line-height: 1; text-shadow: 0px 0px calc(var(--shadowWidth, 2) * 1px) var(--SmartThemeShadowColor); }',
+'#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; letter-spacing: 0.05em; line-height: 1; }',
 '#' + ROOT_ID + ' .menu-close { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--SmartThemeBodyColor); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; padding: 0; opacity: 0.5; }',
 '#' + ROOT_ID + ' .menu-close:hover { background: var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor); opacity: 1; }',
 // ── 分类标签栏：复刻 ST 顶部栏配色 ──

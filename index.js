@@ -627,8 +627,8 @@ function injectStyle() {
 '#' + ROOT_ID + '.open.open-up .menu { transform: translateY(0); }',
 // ── 主面板外壳：完全复刻 ST #sheld / .menu_button 配色 ──
 '#' + ROOT_ID + ' .menu-shell { border: 1px solid var(--SmartThemeBorderColor) !important; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px var(--SmartThemeShadowColor), inset 0 1px 0 rgba(255,255,255,0.05); background: var(--SmartThemeBlurTintColor) !important; backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); position: relative; }',
-// ── 顶栏：复刻 ST extensions_settings header 的渐变配色 ──
-'#' + ROOT_ID + ' .menu-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background-image: linear-gradient(348deg, var(--white30a) 2%, var(--grey30a) 10%, var(--black70a) 95%, var(--SmartThemeQuoteColor) 100%); border-bottom: 1px solid var(--SmartThemeBorderColor) !important; cursor: grab; flex-shrink: 0; }',
+// ── 顶栏：直接使用 ST 主题背景变量，不写死渐变 ──
+'#' + ROOT_ID + ' .menu-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--SmartThemeBlurTintColor); border-bottom: 1px solid var(--SmartThemeBorderColor) !important; cursor: grab; flex-shrink: 0; }',
 '#' + ROOT_ID + ' .menu-head:active { cursor: grabbing; }',
 '#' + ROOT_ID + ' .menu-title-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }',
 '#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; letter-spacing: 0.05em; line-height: 1; text-shadow: 0px 0px calc(var(--shadowWidth, 2) * 1px) var(--SmartThemeShadowColor); }',
@@ -650,13 +650,14 @@ function injectStyle() {
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar { width: 4px; }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar-thumb { background: var(--SmartThemeBorderColor); border-radius: 4px; }',
 '#' + ROOT_ID + ' details { margin-bottom: 2px; }',
-// ── 分组标题：复刻 ST inline-drawer-header 的渐变 ──
-'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 10px; background-image: linear-gradient(348deg, var(--white30a) 2%, var(--grey30a) 10%, var(--black70a) 95%, var(--SmartThemeQuoteColor) 100%); border: 1px solid var(--SmartThemeBorderColor); border-radius: 10px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
+// ── 分组标题：直接使用 ST 主题背景变量，不写死渐变 ──
+'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 10px; background: var(--SmartThemeBlurTintColor); border: 1px solid var(--SmartThemeBorderColor); border-radius: 10px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
 '#' + ROOT_ID + ' summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
 '#' + ROOT_ID + ' .details-content { padding: 8px 0 4px 0; display: flex; flex-direction: column; gap: 6px; }',
-'#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 2px solid var(--SmartThemeBorderColor); padding-left: 6px; margin-bottom: 4px; }',
+// ── 左边框色条：使用 ST 强调色 QuoteColor，与背景区分 ──
+'#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 3px solid var(--SmartThemeQuoteColor); padding-left: 6px; margin-bottom: 4px; }',
 '#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--SmartThemeBorderColor); }',
 '#' + ROOT_ID + ' .nested-details summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' .nested-details .details-content { padding: 6px 0 4px 4px; }',
@@ -678,8 +679,8 @@ function injectStyle() {
 '#' + ROOT_ID + ' .btn-full.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); border-color: var(--SmartThemeQuoteColor) !important; }',
 '#' + ROOT_ID + ' .btn-full.is-on .menu-item-text { color: var(--SmartThemeQuoteColor) !important; }',
 '#' + ROOT_ID + ' .btn-full.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 6px var(--SmartThemeQuoteColor); border-color: transparent; }',
-// ── 底部 logo 栏：与顶栏一致的渐变配色，不再单独分割 ──
-'#' + ROOT_ID + ' .menu-foot { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 13px; font-size: 10px; color: var(--SmartThemeBodyColor); background-image: linear-gradient(348deg, var(--white30a) 2%, var(--grey30a) 10%, var(--black70a) 95%, var(--SmartThemeQuoteColor) 100%); border-top: 1px solid var(--SmartThemeBorderColor); pointer-events: none; letter-spacing: 0.04em; opacity: 0.7; }',
+// ── 底部 logo 栏：使用 ST 主题背景变量，不写死渐变 ──
+'#' + ROOT_ID + ' .menu-foot { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 13px; font-size: 10px; color: var(--SmartThemeBodyColor); background: var(--SmartThemeBlurTintColor); border-top: 1px solid var(--SmartThemeBorderColor); pointer-events: none; letter-spacing: 0.04em; opacity: 0.7; }',
 '#' + ROOT_ID + ' .fox-link { cursor: pointer; color: var(--SmartThemeQuoteColor); font-weight: bold; letter-spacing: 0.5px; transition: filter 0.2s ease; font-size: 10px; }',
 '#' + ROOT_ID + ' .fox-link:hover { filter: brightness(150%); }',
 '@keyframes xbk-orb-in { from { opacity:0; } to { opacity:1; } }',

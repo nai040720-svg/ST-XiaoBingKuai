@@ -656,9 +656,9 @@ function injectStyle() {
 '#' + ROOT_ID + ' summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
-'#' + ROOT_ID + ' .details-content { padding: 8px 6px 6px 6px; display: flex; flex-direction: column; gap: 6px; }',
-// ── 子分组：同样使用强调色外框 ──
-'#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 3px solid var(--SmartThemeQuoteColor); padding-left: 6px; margin-bottom: 4px; }',
+'#' + ROOT_ID + ' .details-content { padding: 8px 10px 8px 10px; display: flex; flex-direction: column; gap: 6px; }',
+// ── 子分组：左边距加大，避免与外层分组外框重合 ──
+'#' + ROOT_ID + ' .nested-details { margin-left: 10px; margin-right: 2px; border-left: 3px solid var(--SmartThemeQuoteColor); padding-left: 8px; margin-bottom: 4px; }',
 '#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 12px 6px 10px; border-radius: 4px; border: none; border-left: 2px solid var(--SmartThemeQuoteColor); }',
 '#' + ROOT_ID + ' .nested-details summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' .nested-details .details-content { padding: 6px 0 4px 4px; }',

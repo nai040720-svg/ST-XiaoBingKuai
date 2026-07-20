@@ -664,20 +664,20 @@ function injectStyle() {
 '.grid-toggles.col-1 { grid-template-columns: 1fr; }',
 // ── 开关指示灯：复刻 ST toggle 按钮配色 ──
 '#' + ROOT_ID + ' .toggle-led { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grey50); transition: background 0.2s ease, box-shadow 0.2s ease; border: 1px solid var(--SmartThemeBorderColor); margin-left: 6px; align-self: center; }',
-// ── 条目按钮：复刻 ST .menu_button 配色 ──
-'#' + ROOT_ID + ' .menu-item-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 5px 8px; border-radius: 5px; box-sizing: border-box; background: var(--SmartThemeBlurTintColor); border: 1px solid var(--SmartThemeBorderColor) !important; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease; margin: 0; color: var(--SmartThemeBodyColor); filter: grayscale(0.5) brightness(80%); }',
-'#' + ROOT_ID + ' .menu-item-toggle:hover { filter: grayscale(0) brightness(100%); background: var(--SmartThemeBorderColor); }',
+// ── 条目按钮：未开启=暗色，开启=发光亮色 ──
+'#' + ROOT_ID + ' .menu-item-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 5px 8px; border-radius: 5px; box-sizing: border-box; background: var(--SmartThemeBlurTintColor); border: 1px solid var(--SmartThemeBorderColor) !important; cursor: pointer; transition: all 0.15s ease; margin: 0; color: var(--SmartThemeBodyColor); filter: grayscale(0.7) brightness(70%); }',
+'#' + ROOT_ID + ' .menu-item-toggle:hover { filter: grayscale(0.3) brightness(90%); }',
 '#' + ROOT_ID + ' .menu-item-text { font-size: 11px; color: var(--SmartThemeBodyColor) !important; white-space: normal; word-break: break-word; line-height: 1.25; margin-top: 0; flex: 1; min-width: 0; }',
-// ── 开启状态：使用 ST 的 QuoteColor 强调色（与 ST 激活态一致） ──
-'#' + ROOT_ID + ' .menu-item-toggle.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); border-color: var(--SmartThemeQuoteColor); filter: grayscale(0) brightness(100%); }',
-'#' + ROOT_ID + ' .menu-item-toggle.is-on .menu-item-text { color: var(--SmartThemeBodyColor) !important; }',
-'#' + ROOT_ID + ' .menu-item-toggle.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 6px var(--SmartThemeQuoteColor); border-color: transparent; }',
-// ── 一键开启按钮：使用 QuoteColor 强调 ──
-'#' + ROOT_ID + ' .btn-full { grid-column: 1 / -1; justify-content: center; background: var(--SmartThemeBlurTintColor); gap: 6px; border: 1px solid var(--SmartThemeBorderColor) !important; }',
+// ── 开启状态：强制发光亮色，不管主题深浅 ──
+'#' + ROOT_ID + ' .menu-item-toggle.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, var(--SmartThemeBlurTintColor) 60%); border-color: var(--SmartThemeQuoteColor); filter: grayscale(0) brightness(130%) saturate(1.5); box-shadow: 0 0 8px color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent); }',
+'#' + ROOT_ID + ' .menu-item-toggle.is-on .menu-item-text { color: var(--SmartThemeBodyColor) !important; filter: brightness(120%); }',
+'#' + ROOT_ID + ' .menu-item-toggle.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 8px var(--SmartThemeQuoteColor), 0 0 14px var(--SmartThemeQuoteColor); border-color: transparent; }',
+// ── 一键开启按钮 ──
+'#' + ROOT_ID + ' .btn-full { grid-column: 1 / -1; justify-content: center; background: var(--SmartThemeBlurTintColor); gap: 6px; border: 1px solid var(--SmartThemeBorderColor) !important; filter: grayscale(0.5) brightness(80%); }',
 '#' + ROOT_ID + ' .btn-full .menu-item-text { font-size: 13px; font-weight: bold; color: var(--SmartThemeQuoteColor) !important; text-align: center; }',
-'#' + ROOT_ID + ' .btn-full.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); border-color: var(--SmartThemeQuoteColor) !important; }',
+'#' + ROOT_ID + ' .btn-full.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, var(--SmartThemeBlurTintColor) 60%); border-color: var(--SmartThemeQuoteColor) !important; filter: grayscale(0) brightness(130%) saturate(1.5); box-shadow: 0 0 8px color-mix(in srgb, var(--SmartThemeQuoteColor) 50%, transparent); }',
 '#' + ROOT_ID + ' .btn-full.is-on .menu-item-text { color: var(--SmartThemeQuoteColor) !important; }',
-'#' + ROOT_ID + ' .btn-full.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 6px var(--SmartThemeQuoteColor); border-color: transparent; }',
+'#' + ROOT_ID + ' .btn-full.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 8px var(--SmartThemeQuoteColor), 0 0 14px var(--SmartThemeQuoteColor); border-color: transparent; }',
 // ── 底部 logo 栏：使用 ST 主题背景变量，不写死渐变 ──
 '#' + ROOT_ID + ' .menu-foot { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 13px; font-size: 10px; color: var(--SmartThemeBodyColor); background: var(--SmartThemeBlurTintColor); border-top: 1px solid var(--SmartThemeBorderColor); pointer-events: none; letter-spacing: 0.04em; opacity: 0.7; }',
 '#' + ROOT_ID + ' .fox-link { cursor: pointer; color: var(--SmartThemeQuoteColor); font-weight: bold; letter-spacing: 0.5px; transition: filter 0.2s ease; font-size: 10px; }',

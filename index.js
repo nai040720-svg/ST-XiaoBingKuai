@@ -646,15 +646,15 @@ function injectStyle() {
 '@media (max-width: 768px) { #' + ROOT_ID + ' .menu-list { max-height: 55vh; } }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar { width: 4px; }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar-thumb { background: var(--SmartThemeBorderColor); border-radius: 4px; }',
-// ── 大分类：无总外框，仅标题左侧竖线 ──
-'#' + ROOT_ID + ' details:not(.nested-details) { margin-bottom: 2px; border: none; border-radius: 0; overflow: visible; }',
+// ── 大分类：无外框，标题微微突出 ──
+'#' + ROOT_ID + ' details:not(.nested-details) { margin-bottom: 4px; border: none; border-radius: 0; overflow: visible; }',
 '#' + ROOT_ID + ' details:not(.nested-details)[open] { box-shadow: none; }',
-// ── 大分类标题：左侧强调色竖线，文字右移 ──
-'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 14px 8px 12px; background: var(--SmartThemeBlurTintColor); border: none; border-left: 3px solid var(--SmartThemeQuoteColor); border-radius: 8px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
+// ── 大分类标题：去掉竖线，用微妙的背景色突出 ──
+'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 14px 8px 12px; background: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, var(--SmartThemeBlurTintColor)); border: none; border-radius: 6px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
 '#' + ROOT_ID + ' summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
-'#' + ROOT_ID + ' .details-content { padding: 8px 10px 8px 10px; display: flex; flex-direction: column; gap: 6px; }',
+'#' + ROOT_ID + ' .details-content { padding: 8px 4px 6px 4px; display: flex; flex-direction: column; gap: 6px; }',
 // ── 子分组：保留总包裹框，四边统一粗细，去掉标题左竖线 ──
 '#' + ROOT_ID + ' .nested-details { margin-left: 10px; margin-right: 2px; border: 1px solid var(--SmartThemeQuoteColor); border-radius: 6px; padding: 0; margin-bottom: 4px; overflow: hidden; }',
 '#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 12px 6px 10px; border-radius: 4px; border: none; }',

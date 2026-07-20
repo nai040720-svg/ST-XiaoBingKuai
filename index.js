@@ -136,9 +136,6 @@ function boot() {
         mountSettingsPanel();
         applyFloatingEnabled(isFloatingEnabled());
         bindPromptUpdates();
-        applyThemeScheme();
-        // 监听主题变化，自动切换明暗模式
-        observeThemeChanges();
         console.log('[小冰块扩展] boot() 完成，悬浮按钮已注入页面');
     } catch (err) {
         console.error('[小冰块扩展] boot() 失败:', err);
@@ -146,61 +143,6 @@ function boot() {
             window.toastr.error('小冰块扩展加载失败: ' + (err && err.message || err), '请查看控制台(F12)');
         }
     }
-}
-
-// ── 主题明暗检测 ──────────────────────────────────────────────
-// 检测当前 ST 主题背景是浅色还是深色，为悬浮窗添加对应类
-function applyThemeScheme() {
-    if (!root) return;
-    var bg = readCssVar('--SmartThemeBlurTintColor') || readCssVar('--SmartThemeBodyColor') || '#161616';
-    var isLight = isColorLight(bg);
-    root.classList.toggle('theme-light', isLight);
-    root.classList.toggle('theme-dark', !isLight);
-}
-
-function readCssVar(name) {
-    try {
-        var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        return v || '';
-    } catch (_) { return ''; }
-}
-
-// 判断颜色是否为浅色（亮度 > 55% 视为浅色）
-function isColorLight(color) {
-    var rgb = parseColor(color);
-    if (!rgb) return false;
-    // 使用感知亮度公式
-    var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-    return luminance > 0.55;
-}
-
-function parseColor(color) {
-    if (!color) return null;
-    color = color.trim();
-    // hex 格式 #rgb / #rrggbb
-    var m = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (m) {
-        var hex = m[1];
-        if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
-        return { r: parseInt(hex.substr(0,2),16), g: parseInt(hex.substr(2,2),16), b: parseInt(hex.substr(4,2),16) };
-    }
-    // rgb / rgba 格式
-    m = color.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-    if (m) return { r: +m[1], g: +m[2], b: +m[3] };
-    return null;
-}
-
-// 监听主题变化（美化主题切换时自动适配）
-var themeObserver = null;
-function observeThemeChanges() {
-    if (themeObserver) return;
-    // 监听 document 属性变化（ST 切换主题会修改 CSS 变量）
-    themeObserver = new MutationObserver(function() {
-        applyThemeScheme();
-    });
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
-    // 也监听 body
-    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
 }
 
 // ── 创建面板 ──────────────────────────────────────────────────
@@ -548,8 +490,6 @@ function toggleMenu() {
 function openMenu() {
     if (!root) return;
     updateMenuDirection();
-    // 打开时重新检测明暗模式（主题可能已切换）
-    applyThemeScheme();
     root.classList.add(CLASS.open);
     // 只同步状态，不重新渲染（避免分组关闭和卡顿）
     syncMenuState();
@@ -671,47 +611,12 @@ function injectStyle() {
 '    user-select: none; -webkit-user-select: none; touch-action: none;',
 '    -webkit-transform: translateZ(0); transform: translateZ(0);',
 '}',
-// ── 明暗模式色板（由 applyThemeScheme 动态添加 class） ──
-'#' + ROOT_ID + '.theme-dark {',
-'    --xbk-bg: var(--SmartThemeBlurTintColor, rgba(22,22,22,0.95));',
-'    --xbk-bg-overlay: rgba(0,0,0,0.20);',
-'    --xbk-bg-tab: rgba(0,0,0,0.12);',
-'    --xbk-bg-item: rgba(0,0,0,0.30);',
-'    --xbk-bg-item-hover: rgba(255,255,255,0.08);',
-'    --xbk-bg-summary: rgba(0,0,0,0.15);',
-'    --xbk-bg-nested: rgba(255,255,255,0.06);',
-'    --xbk-bg-foot: rgba(0,0,0,0.88);',
-'    --xbk-text: #eeeeee;',
-'    --xbk-text-sub: rgba(255,255,255,0.70);',
-'    --xbk-text-dim: rgba(255,255,255,0.40);',
-'    --xbk-border: var(--SmartThemeBorderColor, rgba(255,255,255,0.10));',
-'    --xbk-shadow-text: 0 1px 2px rgba(0,0,0,0.8);',
-'    --xbk-scrollbar: rgba(255,255,255,0.2);',
-'    --xbk-led-off: rgba(255,255,255,0.15);',
-'}',
-'#' + ROOT_ID + '.theme-light {',
-'    --xbk-bg: var(--SmartThemeBlurTintColor, rgba(245,245,245,0.95));',
-'    --xbk-bg-overlay: rgba(0,0,0,0.05);',
-'    --xbk-bg-tab: rgba(0,0,0,0.04);',
-'    --xbk-bg-item: rgba(0,0,0,0.05);',
-'    --xbk-bg-item-hover: rgba(0,0,0,0.08);',
-'    --xbk-bg-summary: rgba(0,0,0,0.04);',
-'    --xbk-bg-nested: rgba(0,0,0,0.04);',
-'    --xbk-bg-foot: rgba(245,245,245,0.95);',
-'    --xbk-text: #1a1a1a;',
-'    --xbk-text-sub: rgba(0,0,0,0.65);',
-'    --xbk-text-dim: rgba(0,0,0,0.40);',
-'    --xbk-border: var(--SmartThemeBorderColor, rgba(0,0,0,0.10));',
-'    --xbk-shadow-text: none;',
-'    --xbk-scrollbar: rgba(0,0,0,0.2);',
-'    --xbk-led-off: rgba(0,0,0,0.15);',
-'}',
 '@keyframes xbk-orbBreathe {',
 '    0%, 100% { text-shadow: 0 0 4px rgba(217,119,87,0.3), 0 0 8px rgba(96,185,200,0.15), 0 0 14px rgba(217,119,87,0.08); }',
 '    50% { text-shadow: 0 0 8px rgba(217,119,87,0.45), 0 0 16px rgba(96,185,200,0.25), 0 0 24px rgba(217,119,87,0.12); }',
 '}',
 '#' + ROOT_ID + ' .orb { position: absolute; top: 0; left: 0; width: 48px; height: 48px; border-radius: 8px; cursor: pointer; z-index: 2; background: transparent; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; }',
-'#' + ROOT_ID + ' .orb:hover { background: var(--xbk-bg-item-hover); }',
+'#' + ROOT_ID + ' .orb:hover { background: var(--SmartThemeBorderColor); }',
 '#' + ROOT_ID + ' .orb-icon { transition: transform 0.3s ease-out; display: block; animation: xbk-orbBreathe 2.5s ease-in-out infinite; }',
 '#' + ROOT_ID + ' .orb:hover .orb-icon { transform: scale(1.12); }',
 '#' + ROOT_ID + '.open .orb-icon { transform: rotate(90deg); }',
@@ -720,67 +625,63 @@ function injectStyle() {
 '#' + ROOT_ID + '.open .menu { pointer-events: all; transform: translateY(0); opacity: 1; }',
 '#' + ROOT_ID + '.open-up .menu { transform: translateY(6px); }',
 '#' + ROOT_ID + '.open.open-up .menu { transform: translateY(0); }',
-'#' + ROOT_ID + ' .menu-shell { border: 1px solid var(--xbk-border) !important; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); background: var(--xbk-bg) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); position: relative; }',
-'#' + ROOT_ID + ' .menu-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--xbk-bg-overlay); border-bottom: 1px solid var(--xbk-border) !important; cursor: grab; flex-shrink: 0; }',
+// ── 主面板外壳：完全复刻 ST #sheld / .menu_button 配色 ──
+'#' + ROOT_ID + ' .menu-shell { border: 1px solid var(--SmartThemeBorderColor) !important; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px var(--SmartThemeShadowColor), inset 0 1px 0 rgba(255,255,255,0.05); background: var(--SmartThemeBlurTintColor) !important; backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength, 8px)); position: relative; }',
+// ── 顶栏：复刻 ST extensions_settings header 的渐变配色 ──
+'#' + ROOT_ID + ' .menu-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background-image: linear-gradient(348deg, var(--white30a) 2%, var(--grey30a) 10%, var(--black70a) 95%, var(--SmartThemeQuoteColor) 100%); border-bottom: 1px solid var(--SmartThemeBorderColor) !important; cursor: grab; flex-shrink: 0; }',
 '#' + ROOT_ID + ' .menu-head:active { cursor: grabbing; }',
 '#' + ROOT_ID + ' .menu-title-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }',
-'#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: var(--xbk-text) !important; letter-spacing: 0.05em; line-height: 1; text-shadow: var(--xbk-shadow-text); }',
-'#' + ROOT_ID + ' .menu-close { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--xbk-text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; padding: 0; }',
-'#' + ROOT_ID + ' .menu-close:hover { background: var(--xbk-bg-item-hover); color: var(--xbk-text) !important; }',
-'#' + ROOT_ID + ' .category-tabs { display: flex; gap: 0; padding: 6px 8px; border-bottom: 1px solid var(--xbk-border) !important; background: var(--xbk-bg-tab); flex-shrink: 0; }',
-'#' + ROOT_ID + ' .category-tab { flex: 1; text-align: center; padding: 5px 0; font-size: 11px; cursor: pointer; border-radius: 5px; transition: all 0.18s; color: var(--xbk-text-dim); font-weight: 500; margin: 0 2px; user-select: none; }',
-'#' + ROOT_ID + ' .category-tab:hover { background: var(--xbk-bg-item-hover); color: var(--xbk-text-sub); }',
-'#' + ROOT_ID + ' .category-tab.cat-1:hover { background: rgba(64,140,255,0.1); color: #4d9fff; }',
-'#' + ROOT_ID + ' .category-tab.cat-2:hover { background: rgba(230,60,60,0.1); color: #ff6b6b; }',
-'#' + ROOT_ID + ' .category-tab.active { font-weight: 700; }',
-'#' + ROOT_ID + ' .category-tab.cat-0.active { background: var(--xbk-bg-item-hover); color: var(--xbk-text) !important; }',
-'#' + ROOT_ID + ' .category-tab.cat-1.active { background: rgba(40,120,255,0.22); color: #4d9fff; }',
-'#' + ROOT_ID + ' .category-tab.cat-2.active { background: rgba(220,40,40,0.22); color: #ff6b6b; }',
-'#' + ROOT_ID + ' .menu-list { padding: 8px 8px 52px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--xbk-scrollbar) transparent; max-height: 65vh; }',
+'#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; letter-spacing: 0.05em; line-height: 1; text-shadow: 0px 0px calc(var(--shadowWidth, 2) * 1px) var(--SmartThemeShadowColor); }',
+'#' + ROOT_ID + ' .menu-close { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--SmartThemeBodyColor); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; padding: 0; opacity: 0.5; }',
+'#' + ROOT_ID + ' .menu-close:hover { background: var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor); opacity: 1; }',
+// ── 分类标签栏：复刻 ST 顶部栏配色 ──
+'#' + ROOT_ID + ' .category-tabs { display: flex; gap: 0; padding: 6px 8px; border-bottom: 1px solid var(--SmartThemeBorderColor) !important; background: var(--SmartThemeBlurTintColor); flex-shrink: 0; }',
+'#' + ROOT_ID + ' .category-tab { flex: 1; text-align: center; padding: 5px 0; font-size: 11px; cursor: pointer; border-radius: 5px; transition: all 0.18s; color: var(--SmartThemeBodyColor); filter: grayscale(0.5); opacity: 0.5; font-weight: 500; margin: 0 2px; user-select: none; }',
+'#' + ROOT_ID + ' .category-tab:hover { background: var(--SmartThemeBorderColor); filter: grayscale(0); opacity: 0.7; }',
+'#' + ROOT_ID + ' .category-tab.cat-1:hover { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, var(--SmartThemeBlurTintColor)); color: var(--SmartThemeQuoteColor); filter: grayscale(0); opacity: 1; }',
+'#' + ROOT_ID + ' .category-tab.cat-2:hover { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, var(--SmartThemeBlurTintColor)); color: var(--SmartThemeQuoteColor); filter: grayscale(0); opacity: 1; }',
+'#' + ROOT_ID + ' .category-tab.active { font-weight: 700; filter: grayscale(0); opacity: 1; }',
+'#' + ROOT_ID + ' .category-tab.cat-0.active { background: var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor); }',
+'#' + ROOT_ID + ' .category-tab.cat-1.active { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); color: var(--SmartThemeQuoteColor); }',
+'#' + ROOT_ID + ' .category-tab.cat-2.active { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); color: var(--SmartThemeQuoteColor); }',
+// ── 列表区 ──
+'#' + ROOT_ID + ' .menu-list { padding: 8px 8px 52px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--SmartThemeBorderColor) transparent; max-height: 65vh; }',
 '@media (max-width: 768px) { #' + ROOT_ID + ' .menu-list { max-height: 55vh; } }',
 '#' + ROOT_ID + ' .menu-list::-webkit-scrollbar { width: 4px; }',
-'#' + ROOT_ID + ' .menu-list::-webkit-scrollbar-thumb { background: var(--xbk-scrollbar); border-radius: 4px; }',
+'#' + ROOT_ID + ' .menu-list::-webkit-scrollbar-thumb { background: var(--SmartThemeBorderColor); border-radius: 4px; }',
 '#' + ROOT_ID + ' details { margin-bottom: 2px; }',
-'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--xbk-text) !important; padding: 8px 10px; background: var(--xbk-bg-summary); border-radius: 6px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; }',
-'#' + ROOT_ID + ' summary:hover { background: var(--xbk-bg-item-hover); }',
+// ── 分组标题：复刻 ST inline-drawer-header 的渐变 ──
+'#' + ROOT_ID + ' summary { font-size: 11.5px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; padding: 8px 10px; background-image: linear-gradient(348deg, var(--white30a) 2%, var(--grey30a) 10%, var(--black70a) 95%, var(--SmartThemeQuoteColor) 100%); border: 1px solid var(--SmartThemeBorderColor); border-radius: 10px; cursor: pointer; list-style: none; user-select: none; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }',
+'#' + ROOT_ID + ' summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' summary::after { content: "▼"; font-size: 9px; opacity: 0.5; transition: transform 0.2s; }',
 '#' + ROOT_ID + ' details[open] > summary::after { transform: rotate(180deg); }',
 '#' + ROOT_ID + ' .details-content { padding: 8px 0 4px 0; display: flex; flex-direction: column; gap: 6px; }',
-'#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 2px solid var(--xbk-border); padding-left: 6px; margin-bottom: 4px; }',
-'#' + ROOT_ID + ' .nested-details summary { background: var(--xbk-bg-nested); font-size: 10.5px; color: var(--xbk-text-sub) !important; padding: 6px 10px; border-radius: 4px; }',
-'#' + ROOT_ID + ' .nested-details summary:hover { background: var(--xbk-bg-item-hover); }',
+'#' + ROOT_ID + ' .nested-details { margin-left: 4px; border-left: 2px solid var(--SmartThemeBorderColor); padding-left: 6px; margin-bottom: 4px; }',
+'#' + ROOT_ID + ' .nested-details summary { background: var(--SmartThemeBlurTintColor); font-size: 10.5px; color: var(--SmartThemeBodyColor) !important; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--SmartThemeBorderColor); }',
+'#' + ROOT_ID + ' .nested-details summary:hover { filter: brightness(150%); }',
 '#' + ROOT_ID + ' .nested-details .details-content { padding: 6px 0 4px 4px; }',
 '.grid-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 4px; }',
 '.grid-toggles.col-1 { grid-template-columns: 1fr; }',
-'#' + ROOT_ID + ' .toggle-led { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--xbk-led-off); transition: background 0.2s ease, box-shadow 0.2s ease; border: 1px solid rgba(0,0,0,0.5); margin-left: 6px; align-self: center; }',
-'#' + ROOT_ID + ' .menu-item-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 5px 8px; border-radius: 6px; box-sizing: border-box; background: var(--xbk-bg-item); border: 1px solid var(--xbk-border) !important; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; margin: 0; }',
-'#' + ROOT_ID + ' .menu-item-toggle:hover { background: var(--xbk-bg-item-hover); }',
-'#' + ROOT_ID + ' .menu-item-text { font-size: 11px; color: var(--xbk-text-sub) !important; white-space: normal; word-break: break-word; line-height: 1.25; margin-top: 0; flex: 1; min-width: 0; }',
-// 开启状态：蓝绿色调在深色模式显眼，在浅色模式用更深的颜色保证可见性
-'#' + ROOT_ID + '.theme-dark .menu-item-toggle.is-on { background: rgba(96,185,200,0.15); border-color: rgba(96,185,200,0.4); }',
-'#' + ROOT_ID + '.theme-dark .menu-item-toggle.is-on .menu-item-text { color: #ffffff !important; }',
-'#' + ROOT_ID + '.theme-dark .menu-item-toggle.is-on .toggle-led { background: #60b9c8; box-shadow: 0 0 6px #60b9c8; border-color: transparent; }',
-'#' + ROOT_ID + '.theme-light .menu-item-toggle.is-on { background: rgba(0,150,160,0.12); border-color: rgba(0,150,160,0.5); }',
-'#' + ROOT_ID + '.theme-light .menu-item-toggle.is-on .menu-item-text { color: #005566 !important; }',
-'#' + ROOT_ID + '.theme-light .menu-item-toggle.is-on .toggle-led { background: #008b9a; box-shadow: 0 0 6px rgba(0,139,154,0.6); border-color: transparent; }',
-// 一键开启按钮：橙色调，浅色模式下加深保证可见
-'#' + ROOT_ID + '.theme-dark .btn-full { grid-column: 1 / -1; justify-content: center; background: rgba(232,176,114,0.05) !important; gap: 6px; border-color: rgba(232,176,114,0.2) !important; }',
-'#' + ROOT_ID + '.theme-dark .btn-full .menu-item-text { font-size: 13px; font-weight: bold; color: #e8b072 !important; text-align: center; }',
-'#' + ROOT_ID + '.theme-dark .btn-full.is-on { background: rgba(232,176,114,0.2) !important; border-color: rgba(232,176,114,0.5) !important; }',
-'#' + ROOT_ID + '.theme-dark .btn-full.is-on .menu-item-text { color: #ffd6a5 !important; }',
-'#' + ROOT_ID + '.theme-dark .btn-full.is-on .toggle-led { background: #e8b072; box-shadow: 0 0 6px #e8b072; border-color: transparent; }',
-'#' + ROOT_ID + '.theme-light .btn-full { grid-column: 1 / -1; justify-content: center; background: rgba(180,120,40,0.06) !important; gap: 6px; border-color: rgba(180,120,40,0.3) !important; }',
-'#' + ROOT_ID + '.theme-light .btn-full .menu-item-text { font-size: 13px; font-weight: bold; color: #b47828 !important; text-align: center; }',
-'#' + ROOT_ID + '.theme-light .btn-full.is-on { background: rgba(180,120,40,0.18) !important; border-color: rgba(180,120,40,0.55) !important; }',
-'#' + ROOT_ID + '.theme-light .btn-full.is-on .menu-item-text { color: #7a4a00 !important; }',
-'#' + ROOT_ID + '.theme-light .btn-full.is-on .toggle-led { background: #b47828; box-shadow: 0 0 6px rgba(180,120,40,0.6); border-color: transparent; }',
-// 底部 logo 栏：跟随主题背景
-'#' + ROOT_ID + ' .menu-foot { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 13px; font-size: 10px; color: var(--xbk-text-dim) !important; background: var(--xbk-bg-foot); pointer-events: none; letter-spacing: 0.04em; }',
-'#' + ROOT_ID + ' .fox-link { cursor: pointer; color: var(--xbk-text-dim); font-weight: bold; letter-spacing: 0.5px; transition: color 0.2s ease; font-size: 10px; }',
-'#' + ROOT_ID + '.theme-dark .fox-link { color: rgba(96,185,200,0.7); }',
-'#' + ROOT_ID + '.theme-dark .fox-link:hover { color: #e8b072; text-shadow: 0 0 8px rgba(232,176,114,0.8); }',
-'#' + ROOT_ID + '.theme-light .fox-link { color: #008b9a; }',
-'#' + ROOT_ID + '.theme-light .fox-link:hover { color: #b47828; text-shadow: 0 0 8px rgba(180,120,40,0.5); }',
+// ── 开关指示灯：复刻 ST toggle 按钮配色 ──
+'#' + ROOT_ID + ' .toggle-led { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grey50); transition: background 0.2s ease, box-shadow 0.2s ease; border: 1px solid var(--SmartThemeBorderColor); margin-left: 6px; align-self: center; }',
+// ── 条目按钮：复刻 ST .menu_button 配色 ──
+'#' + ROOT_ID + ' .menu-item-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 5px 8px; border-radius: 5px; box-sizing: border-box; background: var(--SmartThemeBlurTintColor); border: 1px solid var(--SmartThemeBorderColor) !important; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease; margin: 0; color: var(--SmartThemeBodyColor); filter: grayscale(0.5) brightness(80%); }',
+'#' + ROOT_ID + ' .menu-item-toggle:hover { filter: grayscale(0) brightness(100%); background: var(--SmartThemeBorderColor); }',
+'#' + ROOT_ID + ' .menu-item-text { font-size: 11px; color: var(--SmartThemeBodyColor) !important; white-space: normal; word-break: break-word; line-height: 1.25; margin-top: 0; flex: 1; min-width: 0; }',
+// ── 开启状态：使用 ST 的 QuoteColor 强调色（与 ST 激活态一致） ──
+'#' + ROOT_ID + ' .menu-item-toggle.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); border-color: var(--SmartThemeQuoteColor); filter: grayscale(0) brightness(100%); }',
+'#' + ROOT_ID + ' .menu-item-toggle.is-on .menu-item-text { color: var(--SmartThemeBodyColor) !important; }',
+'#' + ROOT_ID + ' .menu-item-toggle.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 6px var(--SmartThemeQuoteColor); border-color: transparent; }',
+// ── 一键开启按钮：使用 QuoteColor 强调 ──
+'#' + ROOT_ID + ' .btn-full { grid-column: 1 / -1; justify-content: center; background: var(--SmartThemeBlurTintColor); gap: 6px; border: 1px solid var(--SmartThemeBorderColor) !important; }',
+'#' + ROOT_ID + ' .btn-full .menu-item-text { font-size: 13px; font-weight: bold; color: var(--SmartThemeQuoteColor) !important; text-align: center; }',
+'#' + ROOT_ID + ' .btn-full.is-on { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 33%, var(--SmartThemeBlurTintColor) 66%); border-color: var(--SmartThemeQuoteColor) !important; }',
+'#' + ROOT_ID + ' .btn-full.is-on .menu-item-text { color: var(--SmartThemeQuoteColor) !important; }',
+'#' + ROOT_ID + ' .btn-full.is-on .toggle-led { background: var(--SmartThemeQuoteColor); box-shadow: 0 0 6px var(--SmartThemeQuoteColor); border-color: transparent; }',
+// ── 底部 logo 栏：与顶栏一致的渐变配色，不再单独分割 ──
+'#' + ROOT_ID + ' .menu-foot { position: absolute; bottom: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 13px; font-size: 10px; color: var(--SmartThemeBodyColor); background-image: linear-gradient(348deg, var(--white30a) 2%, var(--grey30a) 10%, var(--black70a) 95%, var(--SmartThemeQuoteColor) 100%); border-top: 1px solid var(--SmartThemeBorderColor); pointer-events: none; letter-spacing: 0.04em; opacity: 0.7; }',
+'#' + ROOT_ID + ' .fox-link { cursor: pointer; color: var(--SmartThemeQuoteColor); font-weight: bold; letter-spacing: 0.5px; transition: filter 0.2s ease; font-size: 10px; }',
+'#' + ROOT_ID + ' .fox-link:hover { filter: brightness(150%); }',
 '@keyframes xbk-orb-in { from { opacity:0; } to { opacity:1; } }',
 '#' + ROOT_ID + ' { animation: xbk-orb-in 0.2s ease-out both; }',
 '#' + SETTINGS_ID + ' { margin: 10px 0; }',

@@ -27,9 +27,9 @@ const CLASS = {
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
 const PANEL_DATA = {
   0: [
-        {t:"写作设置",i:[{id:"2c096b4f-2283-48bd-8ca6-2e2fb048de8c",t:"# 语言"},{id:"3cc24793-e971-4cf7-a177-2917063f6b4f",t:"⚪️禁止医学词"},{id:"33083313-6d9d-456d-8229-fc2e601be087",t:"⚪️去除user中心"},{id:"f00f7f5c-65cc-4427-81b5-f04cfae1c57e",t:"⚪️请去工作/上学"},{id:"f86656e0-8f29-44ff-b231-2405282858b7",t:"⚪️不要总吃饭补充包"},{id:"86efb125-5bfe-4a8b-9dbf-9c56d1aa7803",t:"⚪️古代世界@人间月下-海莉"},{id:"abfbfabe-ae03-404d-94da-7fb6d0ddffd7",t:"⚪️语言净化去“儿”音"},{id:"044e1f2e-c14f-4481-9581-8566499eb7bc",t:"⚪️反“然后”"},{id:"99255a68-65f7-407a-bbb2-8134443d2323",t:"⚪️反人机语言"},{id:"824c48a5-1732-448e-b367-46ec6464fc12",t:"⚪️角色信息差"},{id:"76c7e5d9-cd02-4c14-9628-07c7767c31ca",t:"⚪️防解释补充包"},{id:"e82e62a6-958d-44cd-8fc2-aec1a6ec1513",t:"🔧(建议开)视角确认"}],n:[
+        {t:"写作设置",i:[{id:"2c096b4f-2283-48bd-8ca6-2e2fb048de8c",t:"# 语言"},{id:"3cc24793-e971-4cf7-a177-2917063f6b4f",t:"⚪️禁止医学词"},{id:"33083313-6d9d-456d-8229-fc2e601be087",t:"⚪️去除user中心"},{id:"f00f7f5c-65cc-4427-81b5-f04cfae1c57e",t:"⚪️请去工作/上学"},{id:"f86656e0-8f29-44ff-b231-2405282858b7",t:"⚪️不要总吃饭补充包"},{id:"86efb125-5bfe-4a8b-9dbf-9c56d1aa7803",t:"⚪️古代世界@人间月下-海莉"},{id:"abfbfabe-ae03-404d-94da-7fb6d0ddffd7",t:"⚪️语言净化去“儿”音"},{id:"044e1f2e-c14f-4481-9581-8566499eb7bc",t:"⚪️反“然后”"},{id:"99255a68-65f7-407a-bbb2-8134443d2323",t:"⚪️反人机语言"},{id:"824c48a5-1732-448e-b367-46ec6464fc12",t:"⚪️角色信息差"},{id:"76c7e5d9-cd02-4c14-9628-07c7767c31ca",t:"⚪️防解释补充包"}],n:[
             {t:"user设定",i:[{id:"c2110981-b605-4343-a602-bf2b98141cf2",t:"⚪️禁止瞎编user"},{id:"e4969090-d4a3-463d-bffa-5fd10355b6de",t:"日常服装情趣@听安"}]},
-            {t:"char角色设定",i:[{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"⚪️反瞎编char设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"⚪️拒绝穷人/拒绝吃面条"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"⚪️减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"⚪️群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"⚪️反回忆杀[建议开]"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"⚪️你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"⚪️食物补充包"},{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"⚪️反霸总@人间月下"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"⚪️防照搬人设补充包"}]},
+            {t:"char角色设定",i:[{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"⚪️反瞎编char设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"⚪️拒绝穷人/拒绝吃面条"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"⚪️减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"⚪️群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"⚪️反回忆杀[建议开]"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"⚪️你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"⚪️食物补充包"},{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"⚪️反霸总@人间月下"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"⚪️防照搬人设补充包"},{id:"d01005d0-79b1-4076-b793-9a24407e22a2",t:"❌不许收利息"}]},
             {t:"思维链伙伴选择[五选一]",i:[{id:"f4d79314-716b-4e9d-89eb-859bd557dd6c",t:"💖辣椒油有趣剧情"},{id:"34484920-3084-490f-9e79-1b4fb91116da",t:"💖自来水注重人设"},{id:"dca1088c-4236-4c56-8c25-339d14ba65ec",t:"💖小枕头分析user剧情"},{id:"c34ef703-6ca7-4ed1-a0f3-72bfe1830c46",t:"💖小背心色情走向"},{id:"141dd0af-142e-493a-8d6d-817b2f5fcfe7",t:"💖小河流be走向"}]},
             {t:"思维链",i:[{id:"2eff07e7-1abe-49a7-a2db-f4ec231fcd73",t:"💕线上模式"},{id:"7d58874d-319c-487c-8c0b-320254c570ff",t:"💖同人确认"},{id:"01340fe6-8194-4895-902a-6897a75d0a98",t:"💖角色衣物确认"},{id:"a2b6bee4-31fb-41c3-9422-d0e01dcae014",t:"💖关系思考"},{id:"1393feb7-ce02-42f0-807f-7e7056e7d8e0",t:"💖曾经关系剖析"},{id:"da0e5a25-2534-42e4-bdd3-a8208c57ccdf",t:"💖NPC群像"},{id:"177a3603-3e8f-49b0-a2bf-1ea9c28f883f",t:"💖避坑指南"},{id:"810a42b0-e6ad-4e2e-a599-7d216d28d17a",t:"💖人设自检纠错"}]},
         ]},
@@ -56,7 +56,7 @@ const PANEL_DATA = {
             {t:"彩蛋",i:[{id:"532e6e78-8ff0-4a21-8567-17305b93bbd6",t:"⭐[二选一]批注彩蛋"},{id:"ba9aab04-a30d-4746-a4df-eea1235ef9c0",t:"⭐[二选一]艺术字@KKM"}]},
             {t:"双语翻译",i:[{id:"97496817-07b1-4887-928a-a76d243be770",t:"🆕角色母语翻译"},{id:"1db8340d-6f03-4d51-b46f-18e545f24cdf",t:"🆕user母语翻译"}]},
             {t:"抢话扩写",i:[{id:"a1a04757-b085-4a62-b1a9-447912a8c84b",t:"♾️扩写(二选一)♾️"},{id:"0af2f8d8-c627-47ce-acd4-b7f8c7b6f4de",t:"♾️抢话♾️"},{id:"3b98ed41-164e-41d1-bda2-c7c202e99f9d",t:"♾️不抢话不扩写♾️"},{id:"55d2b987-19b1-43c6-8a14-f5af478f79e9",t:"♾️不复述(二选一)♾️"},{id:"4c244a6a-1c18-4664-b19c-bf941674ac2b",t:"🌐[不抢话别开]多线视角"}]},
-            {t:"人称视角",i:[{id:"46a85a94-8b60-46b6-8a0b-9a73ac61fd52",t:"📶user第一人称📶"},{id:"0d4b21f5-5847-4de5-8bc3-1e4486c0e720",t:"📶user第二人称📶"},{id:"f2590da7-e64b-48a9-b194-4c8bf2115f84",t:"📶char第二人称📶"},{id:"9baba8a0-bb60-45d1-9843-f966ee87fa81",t:"🎦第三人称🎦"},{id:"f89f182c-9f5e-4185-a0a4-c828547830d3",t:"🔧防人称主语过多"}]},
+            {t:"人称视角",i:[{id:"46a85a94-8b60-46b6-8a0b-9a73ac61fd52",t:"📶user第一人称📶"},{id:"0d4b21f5-5847-4de5-8bc3-1e4486c0e720",t:"📶user第二人称📶"},{id:"f2590da7-e64b-48a9-b194-4c8bf2115f84",t:"📶char第二人称📶"},{id:"9baba8a0-bb60-45d1-9843-f966ee87fa81",t:"🎦第三人称🎦"},{id:"e82e62a6-958d-44cd-8fc2-aec1a6ec1513",t:"🔧(建议开)视角确认"},{id:"f89f182c-9f5e-4185-a0a4-c828547830d3",t:"🔧防人称主语过多"}]},
             {t:"节奏控制",i:[{id:"b3b8038a-cc6f-4aaf-9516-0ee79dc241aa",t:"🔧缓慢"},{id:"2be718b2-7fd5-475a-b927-f7640658364f",t:"🔧适中"},{id:"16e6d2ad-7aba-4baa-8c10-8898f3f12444",t:"🔧快速"}]},
             {t:"结尾落点",i:[{id:"774e22f6-a171-4859-b9a6-8bf5ff4b2169",t:"✒️推进式落点"},{id:"1dec0105-8bb5-41ad-b013-db1307b9a9e6",t:"✒️即刻式落点"},{id:"c269846a-0ac1-49f8-ac12-63cded83fa1d",t:"✒️具体式落点"}]},
         ]},
@@ -172,7 +172,7 @@ function createPanel() {
                     '<svg viewBox="0 0 48 48" width="16" height="16">' +
                         '<text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>' +
                     '</svg>' +
-                    '<div class="menu-title-wrap"><div class="menu-title">小冰块V3.32双适配版</div></div>' +
+                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.33双适配版</div></div>' +
                     '<button class="menu-close" id="' + ROOT_ID + '-close">✕</button>' +
                 '</div>' +
                 '<div class="category-tabs" id="' + ROOT_ID + '-tabs">' +
@@ -182,7 +182,7 @@ function createPanel() {
                 '</div>' +
                 '<div class="menu-list" id="' + ROOT_ID + '-list"></div>' +
                 '<div class="menu-foot">' +
-                    '<span>小冰块V3.32</span>' +
+                    '<span>小冰块❄️V3.33</span>' +
                     '<span class="fox-link">[ ɪᴄᴇ//ᴄᴜʙᴇ ]</span>' +
                 '</div>' +
             '</div>' +
@@ -368,7 +368,7 @@ function mountSettingsPanel() {
     panel.className = 'xbk-settings-block inline-drawer';
     panel.innerHTML =
         '<div class="inline-drawer-toggle inline-drawer-header xbk-drawer-header">' +
-            '<b>❄️ 小冰块V3.32双适配版</b>' +
+            '<b>❄️ 小冰块❄️V3.33双适配版</b>' +
             '<div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>' +
         '</div>' +
         '<div class="inline-drawer-content" style="display:none;">' +

@@ -31,7 +31,7 @@ const PANEL_DATA = {
             {t:"user设定",i:[{id:"c2110981-b605-4343-a602-bf2b98141cf2",t:"⚪️禁止瞎编user"},{id:"e4969090-d4a3-463d-bffa-5fd10355b6de",t:"日常服装情趣@听安"}]},
             {t:"char角色设定",i:[{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"⚪️反瞎编char设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"⚪️拒绝穷人/拒绝吃面条"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"⚪️减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"⚪️群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"⚪️反回忆杀[建议开]"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"⚪️你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"⚪️食物补充包"},{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"⚪️反霸总@人间月下"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"⚪️防照搬人设补充包"},{id:"d01005d0-79b1-4076-b793-9a24407e22a2",t:"⚪️不许收利息"}]},
             {t:"思维链伙伴选择[五选一]",i:[{id:"f4d79314-716b-4e9d-89eb-859bd557dd6c",t:"💖辣椒油有趣剧情"},{id:"34484920-3084-490f-9e79-1b4fb91116da",t:"💖[推荐]自来水注重人设"},{id:"dca1088c-4236-4c56-8c25-339d14ba65ec",t:"💖小枕头分析user剧情"},{id:"c34ef703-6ca7-4ed1-a0f3-72bfe1830c46",t:"💖小背心色情走向"},{id:"141dd0af-142e-493a-8d6d-817b2f5fcfe7",t:"💖小河流be走向"}]},
-            {t:"思维链",i:[{id:"2eff07e7-1abe-49a7-a2db-f4ec231fcd73",t:"💕线上模式"},{id:"7d58874d-319c-487c-8c0b-320254c570ff",t:"💖同人确认"},{id:"01340fe6-8194-4895-902a-6897a75d0a98",t:"💖角色衣物确认"},{id:"a2b6bee4-31fb-41c3-9422-d0e01dcae014",t:"💖关系思考"},{id:"1393feb7-ce02-42f0-807f-7e7056e7d8e0",t:"💖曾经关系剖析"},{id:"da0e5a25-2534-42e4-bdd3-a8208c57ccdf",t:"💖NPC群像"},{id:"3667cdf9-247a-44bc-b4db-9c2ec18b8708",t:"💖避坑指南"},{id:"810a42b0-e6ad-4e2e-a599-7d216d28d17a",t:"💖人设自检纠错"}]},
+            {t:"思维链",i:[{id:"2eff07e7-1abe-49a7-a2db-f4ec231fcd73",t:"💕线上模式"},{id:"7d58874d-319c-487c-8c0b-320254c570ff",t:"💖同人确认"},{id:"01340fe6-8194-4895-902a-6897a75d0a98",t:"💖角色衣物确认"},{id:"a2b6bee4-31fb-41c3-9422-d0e01dcae014",t:"💖关系思考"},{id:"1393feb7-ce02-42f0-807f-7e7056e7d8e0",t:"💖曾经关系剖析"},{id:"da0e5a25-2534-42e4-bdd3-a8208c57ccdf",t:"💖NPC群像"},{id:"3667cdf9-247a-44bc-b4db-9c2ec18b8708",t:"💖避坑指南"},{id:"810a42b0-e6ad-4e2e-a599-7d216d28d17a",t:"💖人设自检纠错"},{id:"d7900223-6def-43d9-b7dd-e6adb2bacffd",t:"❤️[推荐克]捏user人设模式❤️"}]},
         ]},
         {t:"情感指导",n:[
             {t:"性格分类",i:[{id:"4ea1dd0d-d97c-490e-8ad8-04243a5abb90",t:"💛乖🐕"},{id:"95713768-09cd-4c22-a269-3dcef9b65be9",t:"💛坏🐕"},{id:"14da3bd5-7996-4ead-91e0-5c9f5fccdbda",t:"❤️狐狸"},{id:"42102b85-b74e-4d09-8df4-a54e92822b2d",t:"💙年上"},{id:"8dbfcb48-d678-4784-81c5-cbdff3745c35",t:"💙智性恋"},{id:"102783e7-1e44-4fb4-a168-511c4465a2e5",t:"💚年下"},{id:"fda16125-999c-43f8-b062-9971b0fc303f",t:"💚病娇"}]},
@@ -65,7 +65,6 @@ const PANEL_DATA = {
   ],
   1: [
         {t:"破限与释放",i:[{id:"0956180f-b292-4e6e-a8c7-f6812338fab4",t:"🔵小克破限(按需克4.8别开)@人间月下-海莉"},{id:"a2a49518-7d3c-48de-87d2-ce796919241f",t:"🔵反道德光谱"},{id:"36b43d1c-2a82-42ae-80c2-49d13e56721b",t:"🔵小克卡cot@人间月下"}]},
-        {t:"写作规范",i:[{id:"ad54cb24-1995-43ac-aaff-f6a681c781e7",t:"🔵禁止长镜头补充包"}]},
         {t:"思维与自检",i:[{id:"17441f2f-0d3a-43f4-86e2-a77ed03b131f",t:"🔵克劳德自检草稿 改自@人间月下-海莉"},{id:"449877a9-d464-4562-a263-d28a2d5bbd8a",t:"💙角色渣男/渣女ooc时开）暗黑森林"},{id:"0da57f41-dc6e-4f57-81c1-6ed2f63c4b32",t:"💙克推荐 小克轻自由意志@feybe"},{id:"84c4bc39-2435-4ac7-af72-860e42bd1059",t:"🔵克版自由意志@feybe"},{id:"91465da7-d4fd-4e8e-86c7-db98de4c9a9a",t:"💙小克开启思维链💙"}]},
   ],
   2: [
@@ -79,8 +78,8 @@ const PANEL_DATA = {
 
 // ── 一键开启互斥逻辑数据 ──
 const CLAUDE_SKIP_IDS = ["449877a9-d464-4562-a263-d28a2d5bbd8a","0956180f-b292-4e6e-a8c7-f6812338fab4"];
-const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","b5890d19-f6ef-4880-84b1-71188652f982","15b6968a-a2a2-46e9-953c-4a13cf806e86","8f3fd14d-eace-4910-a748-b13a1be7b968","c1160d81-e5e6-4e8b-a405-108dc17f3b75","61dd05b5-f310-4d84-8419-377214b8c4df","8493af05-e821-4465-98ac-60861a30dc34"];
-const ALL_CLAUDE_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","a2a49518-7d3c-48de-87d2-ce796919241f","ad54cb24-1995-43ac-aaff-f6a681c781e7","17441f2f-0d3a-43f4-86e2-a77ed03b131f","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a","36b43d1c-2a82-42ae-80c2-49d13e56721b"];
+const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","b5890d19-f6ef-4880-84b1-71188652f982","15b6968a-a2a2-46e9-953c-4a13cf806e86","8f3fd14d-eace-4910-a748-b13a1be7b968","c1160d81-e5e6-4e8b-a405-108dc17f3b75","61dd05b5-f310-4d84-8419-377214b8c4df","8493af05-e821-4465-98ac-60861a30dc34","61c5dabf-c028-4588-a243-83e3403ae029"];
+const ALL_CLAUDE_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","a2a49518-7d3c-48de-87d2-ce796919241f","17441f2f-0d3a-43f4-86e2-a77ed03b131f","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a","36b43d1c-2a82-42ae-80c2-49d13e56721b"];
 const ALL_GEMINI_IDS = ["61c5dabf-c028-4588-a243-83e3403ae029","eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","7f764474-282b-401f-9765-ca794d6a8238","ae9dd7aa-163c-44a3-af3a-96f23081f57d","5dcb9682-d276-4093-b599-e305a239edf3","61dd05b5-f310-4d84-8419-377214b8c4df","c1160d81-e5e6-4e8b-a405-108dc17f3b75","15b6968a-a2a2-46e9-953c-4a13cf806e86","b5890d19-f6ef-4880-84b1-71188652f982","07832187-b2d4-4aa8-b135-9194ba17f70c","cc8ded6e-4eb9-4c49-b0ed-59ab8eb02e1a","8557e79e-6267-4cfc-a599-730eec400e10","252ec317-ca51-4bcc-bd3d-9b0e5e167a4e","8493af05-e821-4465-98ac-60861a30dc34","8c01ffc1-4839-48bb-aa8e-fd6e45822304","a7d5e545-a841-4b3f-8dc6-9f0061203035","23a2bd10-918d-4133-ace0-5bb15aeacbc4","8f3fd14d-eace-4910-a748-b13a1be7b968","85a64d71-8741-40bd-967b-5b7cec3c3df8","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d"];
 
 // NSFW互斥：防止发情开启时，关闭同组其他所有NSFW条目
@@ -172,7 +171,7 @@ function createPanel() {
                     '<svg viewBox="0 0 48 48" width="16" height="16">' +
                         '<text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>' +
                     '</svg>' +
-                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.33双适配版</div></div>' +
+                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.5</div></div>' +
                     '<button class="menu-close" id="' + ROOT_ID + '-close">✕</button>' +
                 '</div>' +
                 '<div class="category-tabs" id="' + ROOT_ID + '-tabs">' +
@@ -182,7 +181,7 @@ function createPanel() {
                 '</div>' +
                 '<div class="menu-list" id="' + ROOT_ID + '-list"></div>' +
                 '<div class="menu-foot">' +
-                    '<span>小冰块❄️V3.33</span>' +
+                    '<span>小冰块❄️V3.5</span>' +
                     '<span class="fox-link">[ ɪᴄᴇ//ᴄᴜʙᴇ ]</span>' +
                 '</div>' +
             '</div>' +
@@ -368,7 +367,7 @@ function mountSettingsPanel() {
     panel.className = 'xbk-settings-block inline-drawer';
     panel.innerHTML =
         '<div class="inline-drawer-toggle inline-drawer-header xbk-drawer-header">' +
-            '<b>❄️ 小冰块❄️V3.33双适配版</b>' +
+            '<b>❄️ 小冰块❄️V3.5</b>' +
             '<div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>' +
         '</div>' +
         '<div class="inline-drawer-content" style="display:none;">' +

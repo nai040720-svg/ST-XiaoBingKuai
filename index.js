@@ -11,25 +11,18 @@ import {
     setPromptEnabled,
 } from './presetBridge.js';
 
-import { getRequestHeaders } from '../../../script.js';
-
 const ROOT_ID = 'xbk-floating-panel';
 const STYLE_ID = 'xbk-floating-panel-style';
 const SETTINGS_ID = 'xbk-extension-settings';
 const STORAGE = {
     enabled: 'xbkFloatingPanel.enabled',
     position: 'xbkFloatingPanel.position',
-    changelogVersion: 'xbkFloatingPanel.changelogVersion',
 };
 
 const CLASS = {
     open: 'open',
     openUp: 'open-up',
 };
-
-const LOCAL_VERSION = '3.61';
-const EXTENSION_NAME = 'ST-XiaoBingKuai';
-const REMOTE_CHANGELOG_URL = 'https://raw.githubusercontent.com/nai040720-svg/ST-XiaoBingKuai/main/changelog.json';
 
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
 const PANEL_DATA = {
@@ -142,7 +135,6 @@ function boot() {
         mountSettingsPanel();
         applyFloatingEnabled(isFloatingEnabled());
         bindPromptUpdates();
-        showChangelog();
         console.log('[小冰块扩展] boot() 完成，悬浮按钮已注入页面');
     } catch (err) {
         console.error('[小冰块扩展] boot() 失败:', err);
@@ -602,105 +594,6 @@ function loadJson(key, fallback) { try { const r = localStorage.getItem(key); re
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, function(c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
 
-// ── 更新弹窗 ──────────────────────────────────────────────────
-function showChangelog() {
-    checkRemoteUpdate();
-}
-
-async function checkRemoteUpdate() {
-    try {
-        var response = await fetch(REMOTE_CHANGELOG_URL + '?t=' + Date.now());
-        if (!response.ok) return;
-        var remote = await response.json();
-        var remoteVersion = remote.version;
-        if (!remoteVersion) return;
-
-        if (remoteVersion === LOCAL_VERSION) return;
-
-        var dismissed = localStorage.getItem(STORAGE.changelogVersion);
-        if (dismissed === remoteVersion) return;
-
-        showUpdateDialog(remote);
-    } catch (_) {}
-}
-
-function showUpdateDialog(remoteData) {
-    var existing = document.getElementById('xbk-changelog-modal');
-    if (existing) existing.remove();
-
-    var remoteVersion = remoteData.version || '新版本';
-    var title = remoteData.title || ('小冰块❄ ' + remoteVersion + ' 更新公告');
-    var content = remoteData.content || [];
-
-    var overlay = document.createElement('div');
-    overlay.id = 'xbk-changelog-modal';
-    overlay.className = 'xbk-changelog-overlay';
-
-    var contentHtml = content.map(function(line) {
-        if (line === '') return '<div class="xbk-changelog-line-empty"></div>';
-        return '<div class="xbk-changelog-line">' + escapeHtml(line) + '</div>';
-    }).join('');
-
-    overlay.innerHTML =
-        '<div class="xbk-changelog-dialog">' +
-            '<div class="xbk-changelog-head">' +
-                '<div class="xbk-changelog-icon">❄️</div>' +
-                '<div class="xbk-changelog-title">' + escapeHtml(title) + '</div>' +
-            '</div>' +
-            '<div class="xbk-changelog-body">' + contentHtml + '</div>' +
-            '<div class="xbk-changelog-foot">' +
-                '<button class="xbk-changelog-btn xbk-changelog-cancel" id="xbk-changelog-cancel">取消</button>' +
-                '<button class="xbk-changelog-btn xbk-changelog-confirm" id="xbk-changelog-confirm">确认更新</button>' +
-            '</div>' +
-        '</div>';
-
-    document.body.appendChild(overlay);
-
-    overlay.querySelector('#xbk-changelog-cancel').addEventListener('click', function() {
-        localStorage.setItem(STORAGE.changelogVersion, remoteVersion);
-        overlay.remove();
-    });
-    overlay.querySelector('#xbk-changelog-confirm').addEventListener('click', function() {
-        var btn = overlay.querySelector('#xbk-changelog-confirm');
-        btn.textContent = '更新中...';
-        btn.disabled = true;
-        btn.style.opacity = '0.6';
-        doExtensionUpdate(overlay, remoteVersion);
-    });
-}
-
-async function doExtensionUpdate(overlay, remoteVersion) {
-    try {
-        var headers = { 'Content-Type': 'application/json' };
-        if (typeof getRequestHeaders === 'function') {
-            headers = Object.assign(headers, getRequestHeaders());
-        }
-        var response = await fetch('/api/extensions/update', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ extensionName: EXTENSION_NAME, global: false }),
-        });
-        if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
-        }
-        await response.json();
-        localStorage.setItem(STORAGE.changelogVersion, remoteVersion);
-        if (window.toastr?.success) {
-            window.toastr.success('插件已更新，正在刷新页面...', '更新成功');
-        }
-        overlay.remove();
-        setTimeout(function() { location.reload(); }, 1000);
-    } catch (err) {
-        var btn = overlay.querySelector('#xbk-changelog-confirm');
-        btn.textContent = '确认更新';
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        if (window.toastr?.error) {
-            window.toastr.error('更新失败: ' + (err && err.message || err) + '\n请手动前往GitHub更新', '更新失败');
-        }
-    }
-}
-
 // ── 样式表 ────────────────────────────────────────────────────
 function injectStyle() {
     if (document.getElementById(STYLE_ID)) return;
@@ -797,26 +690,6 @@ function injectStyle() {
 '#' + SETTINGS_ID + ' .xbk-settings-hint { margin-bottom: 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.65; font-size: 0.85em; }',
 '#' + SETTINGS_ID + ' .xbk-settings-row { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 4px 0; cursor: pointer; }',
 '#' + SETTINGS_ID + ' .xbk-settings-row input { margin: 0; }',
-// ── 更新弹窗样式 ──
-'.xbk-changelog-overlay { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: xbk-changelog-fadein 0.25s ease-out; box-sizing: border-box; }',
-'@keyframes xbk-changelog-fadein { from { opacity: 0; } to { opacity: 1; } }',
-'.xbk-changelog-dialog { width: 400px; max-width: 100%; max-height: 80vh; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: var(--SmartThemeBlurTintColor, #1a1a2e); border: 1px solid var(--SmartThemeBorderColor, #333); box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: xbk-changelog-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-sizing: border-box; }',
-'@media (max-width: 768px) { .xbk-changelog-dialog { width: 100%; max-height: 85vh; } .xbk-changelog-overlay { padding: 12px; } }',
-'@keyframes xbk-changelog-pop { from { transform: scale(0.85) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }',
-'.xbk-changelog-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; background: var(--SmartThemeBlurTintColor, #1a1a2e); border-bottom: 1px solid var(--SmartThemeBorderColor, #333); flex-shrink: 0; }',
-'.xbk-changelog-icon { font-size: 24px; }',
-'.xbk-changelog-title { font-size: 15px; font-weight: bold; color: var(--SmartThemeBodyColor, #eee); letter-spacing: 0.03em; }',
-'.xbk-changelog-body { padding: 14px 18px; overflow-y: auto; flex: 1; scrollbar-width: thin; }',
-'.xbk-changelog-body::-webkit-scrollbar { width: 4px; }',
-'.xbk-changelog-body::-webkit-scrollbar-thumb { background: var(--SmartThemeBorderColor, #555); border-radius: 4px; }',
-'.xbk-changelog-line { font-size: 12.5px; line-height: 1.6; color: var(--SmartThemeBodyColor, #ccc); padding: 1px 0; }',
-'.xbk-changelog-line-empty { height: 8px; }',
-'.xbk-changelog-foot { display: flex; gap: 10px; padding: 12px 18px 16px; border-top: 1px solid var(--SmartThemeBorderColor, #333); flex-shrink: 0; }',
-'.xbk-changelog-btn { flex: 1; padding: 9px 0; border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor, #444); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s ease; font-family: inherit; }',
-'.xbk-changelog-cancel { background: transparent; color: var(--SmartThemeBodyColor, #aaa); }',
-'.xbk-changelog-cancel:hover { background: var(--SmartThemeBorderColor, #333); filter: brightness(1.2); }',
-'.xbk-changelog-confirm { background: var(--SmartThemeQuoteColor, #e8976a); color: #fff; border-color: var(--SmartThemeQuoteColor, #e8976a); }',
-'.xbk-changelog-confirm:hover { filter: brightness(1.15); }',
     ].join('\n');
     document.head.appendChild(style);
 }

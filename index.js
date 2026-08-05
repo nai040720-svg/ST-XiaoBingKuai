@@ -17,12 +17,31 @@ const SETTINGS_ID = 'xbk-extension-settings';
 const STORAGE = {
     enabled: 'xbkFloatingPanel.enabled',
     position: 'xbkFloatingPanel.position',
+    changelogVersion: 'xbkFloatingPanel.changelogVersion',
 };
 
 const CLASS = {
     open: 'open',
     openUp: 'open-up',
 };
+
+const CHANGELOG_VERSION = '3.61';
+const CHANGELOG_CONTENT = [
+    '❄已更新至3.61',
+    '1.更新草稿格式增强',
+    '2.更新各种bug',
+    '3.压缩哈基米条目token，预设导入默认情况下比之前减少5k',
+    '4.增强段落需分段',
+    '5.调整提示词，条目位子',
+    '6.增加@雨时的文风【哈基米版树犹如此】←哈基米新王诞生，巨好吃->搭配侬本多情',
+    '7.情感再度加浓',
+    '8.加强防止哈基米超雄八股',
+    '9.加强对话趣味性',
+    '',
+    '⚠️文风最多2个，单开的文风禁止搭配任何其他文风！小剧场最好只开一个！否则token爆炸 酒馆爆炸！',
+    '',
+    '请前往discord更新预设~',
+];
 
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
 const PANEL_DATA = {
@@ -135,6 +154,7 @@ function boot() {
         mountSettingsPanel();
         applyFloatingEnabled(isFloatingEnabled());
         bindPromptUpdates();
+        showChangelog();
         console.log('[小冰块扩展] boot() 完成，悬浮按钮已注入页面');
     } catch (err) {
         console.error('[小冰块扩展] boot() 失败:', err);
@@ -594,6 +614,48 @@ function loadJson(key, fallback) { try { const r = localStorage.getItem(key); re
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, function(c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
 
+// ── 更新弹窗 ──────────────────────────────────────────────────
+function showChangelog() {
+    var dismissed = localStorage.getItem(STORAGE.changelogVersion);
+    if (dismissed === CHANGELOG_VERSION) return;
+
+    var existing = document.getElementById('xbk-changelog-modal');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'xbk-changelog-modal';
+    overlay.className = 'xbk-changelog-overlay';
+
+    var contentHtml = CHANGELOG_CONTENT.map(function(line) {
+        if (line === '') return '<div class="xbk-changelog-line-empty"></div>';
+        return '<div class="xbk-changelog-line">' + escapeHtml(line) + '</div>';
+    }).join('');
+
+    overlay.innerHTML =
+        '<div class="xbk-changelog-dialog">' +
+            '<div class="xbk-changelog-head">' +
+                '<div class="xbk-changelog-icon">❄️</div>' +
+                '<div class="xbk-changelog-title">小冰块❄ 3.61 更新公告</div>' +
+            '</div>' +
+            '<div class="xbk-changelog-body">' + contentHtml + '</div>' +
+            '<div class="xbk-changelog-foot">' +
+                '<button class="xbk-changelog-btn xbk-changelog-cancel" id="xbk-changelog-cancel">取消</button>' +
+                '<button class="xbk-changelog-btn xbk-changelog-confirm" id="xbk-changelog-confirm">确认更新</button>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#xbk-changelog-cancel').addEventListener('click', function() {
+        localStorage.setItem(STORAGE.changelogVersion, CHANGELOG_VERSION);
+        overlay.remove();
+    });
+    overlay.querySelector('#xbk-changelog-confirm').addEventListener('click', function() {
+        localStorage.setItem(STORAGE.changelogVersion, CHANGELOG_VERSION);
+        overlay.remove();
+    });
+}
+
 // ── 样式表 ────────────────────────────────────────────────────
 function injectStyle() {
     if (document.getElementById(STYLE_ID)) return;
@@ -690,6 +752,25 @@ function injectStyle() {
 '#' + SETTINGS_ID + ' .xbk-settings-hint { margin-bottom: 8px; color: var(--SmartThemeBodyColor, inherit); opacity: 0.65; font-size: 0.85em; }',
 '#' + SETTINGS_ID + ' .xbk-settings-row { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 4px 0; cursor: pointer; }',
 '#' + SETTINGS_ID + ' .xbk-settings-row input { margin: 0; }',
+// ── 更新弹窗样式 ──
+'.xbk-changelog-overlay { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: xbk-changelog-fadein 0.25s ease-out; }',
+'@keyframes xbk-changelog-fadein { from { opacity: 0; } to { opacity: 1; } }',
+'.xbk-changelog-dialog { width: 400px; max-width: calc(100vw - 32px); max-height: 80vh; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: var(--SmartThemeBlurTintColor, #1a1a2e); border: 1px solid var(--SmartThemeBorderColor, #333); box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: xbk-changelog-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }',
+'@keyframes xbk-changelog-pop { from { transform: scale(0.85) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }',
+'.xbk-changelog-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; background: var(--SmartThemeBlurTintColor, #1a1a2e); border-bottom: 1px solid var(--SmartThemeBorderColor, #333); flex-shrink: 0; }',
+'.xbk-changelog-icon { font-size: 24px; }',
+'.xbk-changelog-title { font-size: 15px; font-weight: bold; color: var(--SmartThemeBodyColor, #eee); letter-spacing: 0.03em; }',
+'.xbk-changelog-body { padding: 14px 18px; overflow-y: auto; flex: 1; scrollbar-width: thin; }',
+'.xbk-changelog-body::-webkit-scrollbar { width: 4px; }',
+'.xbk-changelog-body::-webkit-scrollbar-thumb { background: var(--SmartThemeBorderColor, #555); border-radius: 4px; }',
+'.xbk-changelog-line { font-size: 12.5px; line-height: 1.6; color: var(--SmartThemeBodyColor, #ccc); padding: 1px 0; }',
+'.xbk-changelog-line-empty { height: 8px; }',
+'.xbk-changelog-foot { display: flex; gap: 10px; padding: 12px 18px 16px; border-top: 1px solid var(--SmartThemeBorderColor, #333); flex-shrink: 0; }',
+'.xbk-changelog-btn { flex: 1; padding: 9px 0; border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor, #444); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s ease; font-family: inherit; }',
+'.xbk-changelog-cancel { background: transparent; color: var(--SmartThemeBodyColor, #aaa); }',
+'.xbk-changelog-cancel:hover { background: var(--SmartThemeBorderColor, #333); filter: brightness(1.2); }',
+'.xbk-changelog-confirm { background: var(--SmartThemeQuoteColor, #e8976a); color: #fff; border-color: var(--SmartThemeQuoteColor, #e8976a); }',
+'.xbk-changelog-confirm:hover { filter: brightness(1.15); }',
     ].join('\n');
     document.head.appendChild(style);
 }

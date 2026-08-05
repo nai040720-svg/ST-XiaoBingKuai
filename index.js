@@ -11,6 +11,8 @@ import {
     setPromptEnabled,
 } from './presetBridge.js';
 
+import { getRequestHeaders } from '../../../script.js';
+
 const ROOT_ID = 'xbk-floating-panel';
 const STYLE_ID = 'xbk-floating-panel-style';
 const SETTINGS_ID = 'xbk-extension-settings';
@@ -615,6 +617,9 @@ function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, function(c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
 
 // ── 更新弹窗 ──────────────────────────────────────────────────
+const EXTENSION_NAME = 'ST-XiaoBingKuai';
+const EXTENSION_REPO_URL = 'https://github.com/nai040720-svg/ST-XiaoBingKuai.git';
+
 function showChangelog() {
     var dismissed = localStorage.getItem(STORAGE.changelogVersion);
     if (dismissed === CHANGELOG_VERSION) return;
@@ -651,9 +656,44 @@ function showChangelog() {
         overlay.remove();
     });
     overlay.querySelector('#xbk-changelog-confirm').addEventListener('click', function() {
-        localStorage.setItem(STORAGE.changelogVersion, CHANGELOG_VERSION);
-        overlay.remove();
+        var btn = overlay.querySelector('#xbk-changelog-confirm');
+        btn.textContent = '更新中...';
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        doExtensionUpdate(overlay);
     });
+}
+
+async function doExtensionUpdate(overlay) {
+    try {
+        var headers = { 'Content-Type': 'application/json' };
+        if (typeof getRequestHeaders === 'function') {
+            headers = Object.assign(headers, getRequestHeaders());
+        }
+        var response = await fetch('/api/extensions/update', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ extensionName: EXTENSION_NAME, global: false }),
+        });
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        var data = await response.json();
+        localStorage.setItem(STORAGE.changelogVersion, CHANGELOG_VERSION);
+        if (window.toastr?.success) {
+            window.toastr.success('插件已更新，正在刷新页面...', '更新成功');
+        }
+        overlay.remove();
+        setTimeout(function() { location.reload(); }, 1000);
+    } catch (err) {
+        var btn = overlay.querySelector('#xbk-changelog-confirm');
+        btn.textContent = '确认更新';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        if (window.toastr?.error) {
+            window.toastr.error('更新失败: ' + (err && err.message || err) + '\n请手动前往GitHub更新', '更新失败');
+        }
+    }
 }
 
 // ── 样式表 ────────────────────────────────────────────────────
@@ -753,9 +793,10 @@ function injectStyle() {
 '#' + SETTINGS_ID + ' .xbk-settings-row { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 4px 0; cursor: pointer; }',
 '#' + SETTINGS_ID + ' .xbk-settings-row input { margin: 0; }',
 // ── 更新弹窗样式 ──
-'.xbk-changelog-overlay { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: xbk-changelog-fadein 0.25s ease-out; }',
+'.xbk-changelog-overlay { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: xbk-changelog-fadein 0.25s ease-out; box-sizing: border-box; }',
 '@keyframes xbk-changelog-fadein { from { opacity: 0; } to { opacity: 1; } }',
-'.xbk-changelog-dialog { width: 400px; max-width: calc(100vw - 32px); max-height: 80vh; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: var(--SmartThemeBlurTintColor, #1a1a2e); border: 1px solid var(--SmartThemeBorderColor, #333); box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: xbk-changelog-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }',
+'.xbk-changelog-dialog { width: 400px; max-width: 100%; max-height: 80vh; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: var(--SmartThemeBlurTintColor, #1a1a2e); border: 1px solid var(--SmartThemeBorderColor, #333); box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: xbk-changelog-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-sizing: border-box; }',
+'@media (max-width: 768px) { .xbk-changelog-dialog { width: 100%; max-height: 85vh; } .xbk-changelog-overlay { padding: 12px; } }',
 '@keyframes xbk-changelog-pop { from { transform: scale(0.85) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }',
 '.xbk-changelog-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; background: var(--SmartThemeBlurTintColor, #1a1a2e); border-bottom: 1px solid var(--SmartThemeBorderColor, #333); flex-shrink: 0; }',
 '.xbk-changelog-icon { font-size: 24px; }',

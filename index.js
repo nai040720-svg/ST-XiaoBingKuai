@@ -27,23 +27,9 @@ const CLASS = {
     openUp: 'open-up',
 };
 
-const CHANGELOG_VERSION = '3.61';
-const CHANGELOG_CONTENT = [
-    '❄已更新至3.61',
-    '1.更新草稿格式增强',
-    '2.更新各种bug',
-    '3.压缩哈基米条目token，预设导入默认情况下比之前减少5k',
-    '4.增强段落需分段',
-    '5.调整提示词，条目位子',
-    '6.增加@雨时的文风【哈基米版树犹如此】←哈基米新王诞生，巨好吃->搭配侬本多情',
-    '7.情感再度加浓',
-    '8.加强防止哈基米超雄八股',
-    '9.加强对话趣味性',
-    '',
-    '⚠️文风最多2个，单开的文风禁止搭配任何其他文风！小剧场最好只开一个！否则token爆炸 酒馆爆炸！',
-    '',
-    '请前往discord更新预设~',
-];
+const LOCAL_VERSION = '3.61';
+const EXTENSION_NAME = 'ST-XiaoBingKuai';
+const REMOTE_CHANGELOG_URL = 'https://raw.githubusercontent.com/nai040720-svg/ST-XiaoBingKuai/main/changelog.json';
 
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
 const PANEL_DATA = {
@@ -617,21 +603,40 @@ function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, function(c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
 
 // ── 更新弹窗 ──────────────────────────────────────────────────
-const EXTENSION_NAME = 'ST-XiaoBingKuai';
-const EXTENSION_REPO_URL = 'https://github.com/nai040720-svg/ST-XiaoBingKuai.git';
-
 function showChangelog() {
-    var dismissed = localStorage.getItem(STORAGE.changelogVersion);
-    if (dismissed === CHANGELOG_VERSION) return;
+    checkRemoteUpdate();
+}
 
+async function checkRemoteUpdate() {
+    try {
+        var response = await fetch(REMOTE_CHANGELOG_URL + '?t=' + Date.now());
+        if (!response.ok) return;
+        var remote = await response.json();
+        var remoteVersion = remote.version;
+        if (!remoteVersion) return;
+
+        if (remoteVersion === LOCAL_VERSION) return;
+
+        var dismissed = localStorage.getItem(STORAGE.changelogVersion);
+        if (dismissed === remoteVersion) return;
+
+        showUpdateDialog(remote);
+    } catch (_) {}
+}
+
+function showUpdateDialog(remoteData) {
     var existing = document.getElementById('xbk-changelog-modal');
     if (existing) existing.remove();
+
+    var remoteVersion = remoteData.version || '新版本';
+    var title = remoteData.title || ('小冰块❄ ' + remoteVersion + ' 更新公告');
+    var content = remoteData.content || [];
 
     var overlay = document.createElement('div');
     overlay.id = 'xbk-changelog-modal';
     overlay.className = 'xbk-changelog-overlay';
 
-    var contentHtml = CHANGELOG_CONTENT.map(function(line) {
+    var contentHtml = content.map(function(line) {
         if (line === '') return '<div class="xbk-changelog-line-empty"></div>';
         return '<div class="xbk-changelog-line">' + escapeHtml(line) + '</div>';
     }).join('');
@@ -640,7 +645,7 @@ function showChangelog() {
         '<div class="xbk-changelog-dialog">' +
             '<div class="xbk-changelog-head">' +
                 '<div class="xbk-changelog-icon">❄️</div>' +
-                '<div class="xbk-changelog-title">小冰块❄ 3.61 更新公告</div>' +
+                '<div class="xbk-changelog-title">' + escapeHtml(title) + '</div>' +
             '</div>' +
             '<div class="xbk-changelog-body">' + contentHtml + '</div>' +
             '<div class="xbk-changelog-foot">' +
@@ -652,7 +657,7 @@ function showChangelog() {
     document.body.appendChild(overlay);
 
     overlay.querySelector('#xbk-changelog-cancel').addEventListener('click', function() {
-        localStorage.setItem(STORAGE.changelogVersion, CHANGELOG_VERSION);
+        localStorage.setItem(STORAGE.changelogVersion, remoteVersion);
         overlay.remove();
     });
     overlay.querySelector('#xbk-changelog-confirm').addEventListener('click', function() {
@@ -660,11 +665,11 @@ function showChangelog() {
         btn.textContent = '更新中...';
         btn.disabled = true;
         btn.style.opacity = '0.6';
-        doExtensionUpdate(overlay);
+        doExtensionUpdate(overlay, remoteVersion);
     });
 }
 
-async function doExtensionUpdate(overlay) {
+async function doExtensionUpdate(overlay, remoteVersion) {
     try {
         var headers = { 'Content-Type': 'application/json' };
         if (typeof getRequestHeaders === 'function') {
@@ -678,8 +683,8 @@ async function doExtensionUpdate(overlay) {
         if (!response.ok) {
             throw new Error('HTTP ' + response.status);
         }
-        var data = await response.json();
-        localStorage.setItem(STORAGE.changelogVersion, CHANGELOG_VERSION);
+        await response.json();
+        localStorage.setItem(STORAGE.changelogVersion, remoteVersion);
         if (window.toastr?.success) {
             window.toastr.success('插件已更新，正在刷新页面...', '更新成功');
         }

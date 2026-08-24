@@ -69,11 +69,10 @@ const PANEL_DATA = {
   ],
   2: [
         {t:"哈基米破限",i:[{id:"61c5dabf-c028-4588-a243-83e3403ae029",t:"🔒Gemini防429"},{id:"eee9108c-1da7-495f-b7cf-346973296b0b",t:"🔒Gemini头部"},{id:"4e6b2ced-890b-46fb-a030-a773902a77e9",t:"🔒Gemini底部越狱"},{id:"7f764474-282b-401f-9765-ca794d6a8238",t:"🔗Gemini防空回"},{id:"61dd05b5-f310-4d84-8419-377214b8c4df",t:"🔗Gemini防止截断"}]},
-        {t:"3.1pro",i:[{id:"ae9dd7aa-163c-44a3-af3a-96f23081f57d",t:"❄️3.1pro必开"},{id:"c8d921de-b2f0-4e1a-8226-ee4d1e686340",t:"❄️3.1pro必开"}]},
+        {t:"无法一键开启|自选按钮",i:[{id:"ae9dd7aa-163c-44a3-af3a-96f23081f57d",t:"❄️3.1pro必开"},{id:"c8d921de-b2f0-4e1a-8226-ee4d1e686340",t:"❄️3.1pro必开"},{id:"cfa71971-5fb9-4d00-b2a7-5fa17e1c8566",t:"👑①3.7flash必开"},{id:"10c6c966-1d95-4501-9bde-45662a23dfc7",t:"👑②3.7flash必开"}]},
         {t:"情感指导",i:[{id:"c1160d81-e5e6-4e8b-a405-108dc17f3b75",t:"✦✦友好世界✦✦"},{id:"15b6968a-a2a2-46e9-953c-4a13cf806e86",t:"└>🦋防止超雄绝望"}]},
         {t:"自检",i:[{id:"07832187-b2d4-4aa8-b135-9194ba17f70c",t:"🐾Gemini自由意志"},{id:"8557e79e-6267-4cfc-a599-730eec400e10",t:"💟Gemini自由意志"},{id:"252ec317-ca51-4bcc-bd3d-9b0e5e167a4e",t:"˙⟡💭Gemini开启思维链₊˚⊹  "}]},
         {t:"行为规范",i:[{id:"23a2bd10-918d-4133-ace0-5bb15aeacbc4",t:"⚖️Gemini八股"},{id:"8f3fd14d-eace-4910-a748-b13a1be7b968",t:"🖊️防阴谋论"},{id:"85a64d71-8741-40bd-967b-5b7cec3c3df8",t:"🌐减少反问"}]},
-        {t:"3.7flash",i:[{id:"cfa71971-5fb9-4d00-b2a7-5fa17e1c8566",t:"👑①3.7flash必开"},{id:"10c6c966-1d95-4501-9bde-45662a23dfc7",t:"👑②3.7flash必开"}]},
   ],
 };;
 

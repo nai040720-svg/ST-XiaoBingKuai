@@ -181,7 +181,7 @@ function createPanel() {
                     '<svg viewBox="0 0 48 48" width="16" height="16">' +
                         '<text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>' +
                     '</svg>' +
-                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.8</div></div>' +
+                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.82</div></div>' +
                     '<button class="menu-close" id="' + ROOT_ID + '-close">✕</button>' +
                 '</div>' +
                 '<div class="category-tabs" id="' + ROOT_ID + '-tabs">' +
@@ -191,7 +191,7 @@ function createPanel() {
                 '</div>' +
                 '<div class="menu-list" id="' + ROOT_ID + '-list"></div>' +
                 '<div class="menu-foot">' +
-                    '<span>小冰块❄️V3.8</span>' +
+                    '<span>小冰块❄️V3.82</span>' +
                     '<span class="fox-link">[ ɪᴄᴇ//ᴄᴜʙᴇ ]</span>' +
                 '</div>' +
             '</div>' +
@@ -416,7 +416,7 @@ function mountSettingsPanel() {
     panel.className = 'xbk-settings-block inline-drawer';
     panel.innerHTML =
         '<div class="inline-drawer-toggle inline-drawer-header xbk-drawer-header">' +
-            '<b>❄️ 小冰块❄️V3.8</b>' +
+            '<b>❄️ 小冰块❄️V3.82</b>' +
             '<div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>' +
         '</div>' +
         '<div class="inline-drawer-content" style="display:none;">' +

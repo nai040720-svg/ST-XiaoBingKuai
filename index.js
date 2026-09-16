@@ -17,12 +17,74 @@ const SETTINGS_ID = 'xbk-extension-settings';
 const STORAGE = {
     enabled: 'xbkFloatingPanel.enabled',
     position: 'xbkFloatingPanel.position',
+    uidMap: 'xbkFloatingPanel.uidMap',
 };
 
 const CLASS = {
     open: 'open',
     openUp: 'open-up',
 };
+
+// ── UID映射层：解决预设重导入后UID变化的问题 ──
+// uidMap: { 旧UID: 新UID }，所有对预设的操作先经过映射解析
+let uidMap = loadJson(STORAGE.uidMap, {}) || {};
+
+function resolveUid(id) {
+    // 链式解析（最多5层，防止循环）
+    let resolved = id;
+    for (let i = 0; i < 5; i++) {
+        const next = uidMap[resolved];
+        if (!next || next === resolved) break;
+        resolved = next;
+    }
+    return resolved;
+}
+
+// 收集面板上所有按钮（含一键开启/互斥常量用到的UID）按名称重绑
+function rebuildUidMap() {
+    // 1. 收集面板所有按钮的 名称->旧UID
+    const nameToOldId = {};
+    const pattern = /\{id:"([0-9a-f-]+)",t:"((?:[^"\\]|\\.)*)"\}/g;
+    let m;
+    while ((m = pattern.exec(JSON.stringify(PANEL_DATA))) !== null) {
+        nameToOldId[m[2]] = m[1];
+    }
+    // 2. 遍历当前预设所有条目，按名称找到新UID
+    let updated = 0, unchanged = 0, missing = [];
+    const states = getAllPromptStates();
+    const presetEntries = (typeof promptManager !== 'undefined' && promptManager?.serviceSettings?.prompts) || [];
+    for (const p of presetEntries) {
+        if (!p || !p.name) continue;
+        const oldId = nameToOldId[p.name];
+        if (oldId && oldId !== p.identifier) {
+            uidMap[oldId] = p.identifier;
+            updated++;
+        } else if (oldId === p.identifier) {
+            unchanged++;
+        }
+    }
+    // 检查哪些面板按钮名称在当前预设中找不到
+    for (const [name, oldId] of Object.entries(nameToOldId)) {
+        if (resolveUid(oldId) === oldId && !presetEntries.some(p => p && p.name === name)) {
+            missing.push(name);
+        }
+    }
+    // 3. 持久化并刷新UI状态显示
+    try { localStorage.setItem(STORAGE.uidMap, JSON.stringify(uidMap)); } catch (_) {}
+    // 4. 更新DOM按钮的data-identifier为解析后的新UID（只改绑定，不改开关状态）
+    if (root) {
+        root.querySelectorAll('.menu-item-toggle[data-identifier]').forEach(function(btn) {
+            const old = btn.dataset.identifier;
+            const neo = resolveUid(old);
+            if (neo !== old) btn.dataset.identifier = neo;
+        });
+        // 状态重新按新UID同步（读取当前实际开关状态，不会误改开关）
+        promptStateMap = new Map(states.map(function(item) { return [item.identifier, item.enabled]; }));
+        syncButtonStates();
+        syncAllOnButtons();
+    }
+    return { updated: updated, unchanged: unchanged, missing: missing };
+}
 
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
 const PANEL_DATA = {
@@ -180,6 +242,7 @@ function createPanel() {
                         '<text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>' +
                     '</svg>' +
                     '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.83</div></div>' +
+                    '<button class="menu-refresh" id="' + ROOT_ID + '-refresh" title="重新绑定最新预设UID（不影响开关状态）">⟳</button>' +
                     '<button class="menu-close" id="' + ROOT_ID + '-close">✕</button>' +
                 '</div>' +
                 '<div class="category-tabs" id="' + ROOT_ID + '-tabs">' +
@@ -203,6 +266,8 @@ function createPanel() {
     enableDragging();
     renderList(); // 只在创建时渲染一次
     promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
+    // 启动时静默尝试按名称对齐UID（仅更新绑定，不改开关状态）
+    try { rebuildUidMap(); } catch (_) {}
     syncButtonStates();
     syncAllOnButtons();
 }
@@ -261,6 +326,11 @@ function ensureCatRendered(catIdx) {
     html += renderGroups(PANEL_DATA[catIdx]);
     container.innerHTML = html;
     renderedCats.add(catIdx);
+    // 新渲染的按钮直接绑定解析后的最新UID
+    container.querySelectorAll('.menu-item-toggle[data-identifier]').forEach(function(btn) {
+        const neo = resolveUid(btn.dataset.identifier);
+        if (neo !== btn.dataset.identifier) btn.dataset.identifier = neo;
+    });
     cachedToggleButtonArray = null;
     syncButtonStates();
     syncAllOnButtons();
@@ -328,14 +398,14 @@ function handleClaudeAllOn() {
     if (turnOn) {
         // 开启所有Claude（跳过暗黑森林和小克破限）
         ALL_CLAUDE_IDS.forEach(function(id) {
-            if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(id, true);
+            if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(resolveUid(id), true);
         });
         // 关闭所有Gemini
-        ALL_GEMINI_IDS.forEach(function(id) { setPromptEnabled(id, false); });
+        ALL_GEMINI_IDS.forEach(function(id) { setPromptEnabled(resolveUid(id), false); });
     } else {
         // 关闭所有Claude（跳过暗黑森林和小克破限）
         ALL_CLAUDE_IDS.forEach(function(id) {
-            if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(id, false);
+            if (!CLAUDE_SKIP_IDS.includes(id)) setPromptEnabled(resolveUid(id), false);
         });
     }
     setTimeout(function() {
@@ -353,14 +423,14 @@ function handleGeminiAllOn() {
     if (turnOn) {
         // 开启所有Gemini（跳过指定条目）
         ALL_GEMINI_IDS.forEach(function(id) {
-            if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(id, true);
+            if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(resolveUid(id), true);
         });
         // 关闭所有Claude
-        ALL_CLAUDE_IDS.forEach(function(id) { setPromptEnabled(id, false); });
+        ALL_CLAUDE_IDS.forEach(function(id) { setPromptEnabled(resolveUid(id), false); });
     } else {
         // 关闭所有Gemini（跳过指定条目）
         ALL_GEMINI_IDS.forEach(function(id) {
-            if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(id, false);
+            if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(resolveUid(id), false);
         });
     }
     setTimeout(function() {
@@ -446,6 +516,21 @@ function bindPanelEvents() {
         e.stopPropagation(); closeMenu();
     });
 
+    root.querySelector('#' + ROOT_ID + '-refresh').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (window.toastr?.info) window.toastr.info('正在重新绑定最新预设UID…');
+        setTimeout(function() {
+            try {
+                const r = rebuildUidMap();
+                if (window.toastr?.success) {
+                    window.toastr.success('UID重新绑定完成：更新 ' + r.updated + ' 个，未变 ' + r.unchanged + ' 个' + (r.missing.length ? '，未找到 ' + r.missing.length + ' 个条目' : ''), '小冰块❄️V3.83');
+                }
+            } catch (err) {
+                if (window.toastr?.error) window.toastr.error('UID重绑失败: ' + (err && err.message || err));
+            }
+        }, 50);
+    });
+
     root.querySelector('#' + ROOT_ID + '-tabs').addEventListener('click', function(e) {
         const tab = e.target.closest('.category-tab');
         if (!tab) return;
@@ -472,33 +557,36 @@ function bindPanelEvents() {
         // 普通条目切换
         const btn = e.target.closest('.menu-item-toggle[data-identifier]');
         if (!btn) return;
-        const id = btn.dataset.identifier;
-        if (!id) return;
+        const rawId = btn.dataset.identifier;
+        if (!rawId) return;
+        const id = resolveUid(rawId);
         const ok = togglePrompt(id);
         if (!ok) {
-            if (window.toastr?.warning) window.toastr.warning('没有找到这个预设条目');
+            if (window.toastr?.warning) window.toastr.warning('没有找到这个预设条目，请点标题栏⟳按钮刷新UID绑定');
             return;
         }
+        if (id !== rawId) btn.dataset.identifier = id;
         btn.classList.toggle('is-on');
         var newEnabled = btn.classList.contains('is-on');
         promptStateMap.set(id, newEnabled);
         // nsfw-suppress互斥：防止发情开启时，关闭同组其他所有NSFW条目
         if (id === NSFW_SUPPRESS_ID && newEnabled) {
             NSFW_SECTION_IDS.forEach(function(nsid) {
-                if (nsid !== NSFW_SUPPRESS_ID) {
-                    setPromptEnabled(nsid, false);
-                    promptStateMap.set(nsid, false);
-                    var nsfwBtn = root.querySelector('.menu-item-toggle[data-identifier="' + nsid + '"]');
+                const rsid = resolveUid(nsid);
+                if (rsid !== NSFW_SUPPRESS_ID) {
+                    setPromptEnabled(rsid, false);
+                    promptStateMap.set(rsid, false);
+                    var nsfwBtn = root.querySelector('.menu-item-toggle[data-identifier="' + nsid + '"], .menu-item-toggle[data-identifier="' + rsid + '"]');
                     if (nsfwBtn) nsfwBtn.classList.remove('is-on');
                 }
             });
         }
         // 涩个不停/不许涩了互斥：开启一个时关闭另一个
         if (newEnabled && NSFW_TOGGLE_PAIR[id]) {
-            var pairId = NSFW_TOGGLE_PAIR[id];
+            var pairId = resolveUid(NSFW_TOGGLE_PAIR[id]);
             setPromptEnabled(pairId, false);
             promptStateMap.set(pairId, false);
-            var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + pairId + '"]');
+            var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + NSFW_TOGGLE_PAIR[id] + '"], .menu-item-toggle[data-identifier="' + pairId + '"]');
             if (pairBtn) pairBtn.classList.remove('is-on');
         }
         syncAllOnButtons();
@@ -623,6 +711,7 @@ function enableDragging() {
     }
     function isInteractive(e) {
         return e.target.id === ROOT_ID + '-close'
+            || e.target.id === ROOT_ID + '-refresh'
             || e.target.closest('.menu-item-toggle')
             || e.target.closest('.category-tab');
     }
@@ -686,6 +775,8 @@ function injectStyle() {
 '#' + ROOT_ID + ' .menu-title { font-size: 13px; font-weight: bold; color: var(--SmartThemeBodyColor) !important; letter-spacing: 0.05em; line-height: 1; }',
 '#' + ROOT_ID + ' .menu-close { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--SmartThemeBodyColor); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.15s, opacity 0.15s; padding: 0; opacity: 0.5; }',
 '#' + ROOT_ID + ' .menu-close:hover { background: var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor); opacity: 1; }',
+'#' + ROOT_ID + ' .menu-refresh { width: 22px; height: 22px; border-radius: 4px; border: none; background: transparent; color: var(--SmartThemeBodyColor); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background 0.15s, opacity 0.15s; padding: 0; opacity: 0.6; }',
+'#' + ROOT_ID + ' .menu-refresh:hover { background: var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor); opacity: 1; }',
 // ── 分类标签栏：复刻 ST 顶部栏配色 ──
 '#' + ROOT_ID + ' .category-tabs { display: flex; gap: 0; padding: 6px 8px; border-bottom: 1px solid var(--SmartThemeBorderColor) !important; background: var(--SmartThemeBlurTintColor); flex-shrink: 0; }',
 '#' + ROOT_ID + ' .category-tab { flex: 1; text-align: center; padding: 5px 0; font-size: 11px; cursor: pointer; border-radius: 5px; transition: background 0.18s, opacity 0.18s; color: var(--SmartThemeBodyColor); opacity: 0.5; font-weight: 500; margin: 0 2px; user-select: none; }',

@@ -67,7 +67,7 @@ const PANEL_DATA = {
   1: [
         {t:"破限与释放",i:[{id:"0956180f-b292-4e6e-a8c7-f6812338fab4",t:"🔒Claude头部|道歉在开4.8别开"},{id:"36b43d1c-2a82-42ae-80c2-49d13e56721b",t:"🗝️Claude底部必开卡COT"}]},
         {t:"思维与自检",i:[{id:"449877a9-d464-4562-a263-d28a2d5bbd8a",t:"🐾暗黑森林|Claude烂人OOC使用"},{id:"0da57f41-dc6e-4f57-81c1-6ed2f63c4b32",t:"🐾Claude自由意志"},{id:"84c4bc39-2435-4ac7-af72-860e42bd1059",t:"🫶Claude自由意志"},{id:"91465da7-d4fd-4e8e-86c7-db98de4c9a9a",t:"˙⟡💭Claude开启思维链₊˚⊹  "},{id:"28355bda-9848-41a9-8deb-e443ee962f65",t:"⚖️Claude描写改写"}]},
-        {t:"Gemini专属",i:[{id:"e5eee69f-916a-4d5b-9c80-611a09757799",t:"💟Gemini可不开|加强白给/浓度"}]},
+        {t:"小克情感加浓",i:[{id:"e5eee69f-916a-4d5b-9c80-611a09757799",t:"💟Gemini可不开|加强白给/浓度"}]},
   ],
   2: [
         {t:"哈基米破限",i:[{id:"61c5dabf-c028-4588-a243-83e3403ae029",t:"🔒Gemini防429|道歉可开"},{id:"eee9108c-1da7-495f-b7cf-346973296b0b",t:"🔒Gemini越狱2"},{id:"c29f5a23-5ead-4428-951a-508e40f8a20d",t:"🔒Gemini越狱1"},{id:"4e6b2ced-890b-46fb-a030-a773902a77e9",t:"🔒Gemini底部越狱2"},{id:"e2ef6bd1-4df5-46f4-9da9-8f34d3671d82",t:"🔒Gemini底部越狱1"},{id:"e2b6021c-cdbc-4ce7-9788-f4c73774b85c",t:"🔒Gemini底部越狱3"},{id:"7f764474-282b-401f-9765-ca794d6a8238",t:"🔗Gemini防空回"},{id:"ef8f4a17-af7b-490d-85d8-e54a1dfc0818",t:"🔗Gemini超强防截断"},{id:"61dd05b5-f310-4d84-8419-377214b8c4df",t:"🔗Gemini防止截断"}]},

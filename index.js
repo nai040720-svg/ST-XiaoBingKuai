@@ -124,13 +124,13 @@ const PANEL_DATA = {
         {t:"写作设置",i:[{id:"88f13edf-e0fd-4e06-80ff-c13352a0c89e",t:"📦角色没有胡茬/薄茧"},{id:"ab161e33-aded-4b87-b5a5-5a69dc5ed29d",t:"📦防止夸张描写"},{id:"33083313-6d9d-456d-8229-fc2e601be087",t:"🖊️去除USER中心"},{id:"f00f7f5c-65cc-4427-81b5-f04cfae1c57e",t:"🖊️请去工作/上学"},{id:"f86656e0-8f29-44ff-b231-2405282858b7",t:"🖊️不要总吃饭补充包"},{id:"abfbfabe-ae03-404d-94da-7fb6d0ddffd7",t:"⚖️反复读"},{id:"99255a68-65f7-407a-bbb2-8134443d2323",t:"✧─🆔反人机语言─✧"},{id:"7b1cf0df-71a2-47de-8c6b-abee9ab1e1d1",t:"🖊️防全知"},{id:"78efd275-b3fd-4c72-a5ca-d071a0094233",t:"🖊️不要拆解动作"}],n:[
             {t:"去八股",i:[{id:"0e987dc8-43cc-4c00-954f-ffc67c384b6f",t:"✏️二选一|字数检测"},{id:"9ca01a33-a015-4647-86f1-b34edb73807c",t:"˙⟡🔔二选一|自检草稿₊˚⊹"},{id:"6fe81f7c-ff18-415d-8e98-46d8a4a1949f",t:"˙⟡🔔草稿格式增强₊˚⊹"},{id:"9cb5b815-302b-4c35-a947-7382f011e964",t:"˙⟡🌼防重复全部正文₊˚⊹  "},{id:"be1d1013-bb94-45d7-90ec-2faacc0f512d",t:"⚖️限制Ai腔"},{id:"3a351be1-f1eb-4aa8-b28d-02f7395d66f1",t:"⚖️修喻法则"},{id:"044e1f2e-c14f-4481-9581-8566499eb7bc",t:"⚖️反转折词"},{id:"76c7e5d9-cd02-4c14-9628-07c7767c31ca",t:"⚖️防解释补充包"},{id:"2a020bf1-a433-4005-b1a1-8b1f6061ba27",t:"⚖️去破折号 符号净化"},{id:"1b38dab4-de05-4f94-a2b9-9f950e651978",t:"📦禁止医学词"}]},
             {t:"user设定",i:[{id:"a7d5e545-a841-4b3f-8dc6-9f0061203035",t:"🎀༘防弱化USER"},{id:"e9890783-56ef-4a30-b29b-4ae967104b23",t:"🎀༘不许给USER取外号"},{id:"c2110981-b605-4343-a602-bf2b98141cf2",t:"🎀༘禁止瞎编USER"},{id:"e4969090-d4a3-463d-bffa-5fd10355b6de",t:"📦日常情趣服装"}]},
-            {t:"char角色设定",i:[{id:"8c01ffc1-4839-48bb-aa8e-fd6e45822304",t:"🦋加强防照搬人设"},{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"🦋反瞎编CHAR设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"📦拒绝穷人"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"📦减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"🌐群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"🌐反回忆杀"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"📦你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"📦食物补充包"},{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"📦二选一|反霸总@人间月下"},{id:"af105e46-fa0d-4be4-aaee-bd15b2699b9a",t:"📦二选一|轻量反霸总@人间月下"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"└>🦋防照搬人设"},{id:"d01005d0-79b1-4076-b793-9a24407e22a2",t:"📦不许收利息"},{id:"d5441e81-f1ab-4d81-a7c0-af45b334ce73",t:"📦去除“儿”化音"}]},
+            {t:"char角色设定",i:[{id:"8c01ffc1-4839-48bb-aa8e-fd6e45822304",t:"🦋加强防照搬人设"},{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"🦋反瞎编CHAR设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"📦拒绝穷人"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"📦减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"🌐群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"🌐反回忆杀"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"📦你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"📦食物补充包"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"└>🦋防照搬人设"},{id:"d01005d0-79b1-4076-b793-9a24407e22a2",t:"📦不许收利息"},{id:"d5441e81-f1ab-4d81-a7c0-af45b334ce73",t:"📦去除“儿”化音"}]},
             {t:"思维链",i:[{id:"2eff07e7-1abe-49a7-a2db-f4ec231fcd73",t:"🐾线上模式"},{id:"7d58874d-319c-487c-8c0b-320254c570ff",t:"🐾同人确认"},{id:"01340fe6-8194-4895-902a-6897a75d0a98",t:"🐾衣物确认"},{id:"da0e5a25-2534-42e4-bdd3-a8208c57ccdf",t:"🐾NPC群像"},{id:"810a42b0-e6ad-4e2e-a599-7d216d28d17a",t:"🐾人设自检纠错"},{id:"d7900223-6def-43d9-b7dd-e6adb2bacffd",t:"🐾捏USER人设模式|推荐Claude"}]},
         ]},
         {t:"情感指导",n:[
             {t:"性格分类",i:[{id:"4ea1dd0d-d97c-490e-8ad8-04243a5abb90",t:"💟乖狗"},{id:"95713768-09cd-4c22-a269-3dcef9b65be9",t:"💟坏狗"},{id:"7de10412-37a5-4e86-8a13-2427c2c6c74d",t:"💟装可怜狗"},{id:"d2064c1f-de15-46e4-8b5a-81d680f6920e",t:"💟不要白给"},{id:"14da3bd5-7996-4ead-91e0-5c9f5fccdbda",t:"💟狐狸"},{id:"42102b85-b74e-4d09-8df4-a54e92822b2d",t:"💟年上"},{id:"8dbfcb48-d678-4784-81c5-cbdff3745c35",t:"💟智性恋"},{id:"102783e7-1e44-4fb4-a168-511c4465a2e5",t:"💟年下"},{id:"fda16125-999c-43f8-b062-9971b0fc303f",t:"💟病娇"}]},
         ]},
-        {t:"文风滤镜",n:[
+        {t:"文风滤镜",i:[{id:"8afc7e8e-7c29-4c58-8340-e1c60126541f",t:"♥─加强严肃小说感─♥"}],n:[
             {t:"好吃的文风之一",i:[{id:"049f2e54-71b7-4ff0-ab85-9c6ccfc21087",t:"🍧讽刺|张爱玲"},{id:"dd31bab6-bb12-4fdf-9ace-de6bbe140e9c",t:"🎵日常|平凡人生@枳枳"},{id:"e6b54202-73da-40fb-8cb6-11efb5df4f10",t:"🍧BL|蓝淋"},{id:"fabb9889-f06b-44ef-ac5b-5da3537fcf4b",t:"🎵白描|白水烹鲜@茉莉"},{id:"35bcc201-7e18-40d2-9101-c2259fd36f74",t:"🎵好吃酸涩|青橘海@与君绝"},{id:"7c28d63b-3c02-4ba1-8508-15711210da72",t:"🎵甜宠|甜腻腻@踢踢"},{id:"2731cb7c-3eed-4bc8-9d08-0d56c740d1c9",t:"🎵恨海情天|碎瓷@踢踢"},{id:"131c15fa-89c2-4e43-934c-29e584ab89fc",t:"📀忧郁|蓝调时@金鱼"}]},
             {t:"Nian的文风",i:[{id:"bca8127b-5469-40cd-9780-7a61b5bbbd25",t:"🍧简媜|小远方"},{id:"14012652-c27c-4653-81df-da51a2a92112",t:"🍧简媜|小痛饼"},{id:"848f782d-e6b8-45be-bbc7-b521b345e708",t:"🍧甜宠喜剧|小坏饼"},{id:"c776bd21-69cb-4ede-a77b-79f402eba7d0",t:"🍧巫哲|小斗嘴"},{id:"18b5ebfa-ffe8-441a-9cf0-bd750dbc19ba",t:"🍧抒情回忆|小思念"},{id:"b3015511-6ca3-4892-a020-36d2f4c536fa",t:"🍧木心|小散文"},{id:"44be7806-29d6-40de-b16f-2ab229b52849",t:"🍧太宰治|小卑劣"}]},
             {t:"只能单开@三水",i:[{id:"9b86efad-acb7-44c4-ab5e-a1651bfde2ec",t:"📀古风|锦绣灰堆@三水"},{id:"5fd9aea4-1ba6-4315-9155-7073f7cea7c7",t:"📀都市|Patina@三水"},{id:"782fbd39-a81b-4de7-bdfa-1bb62a04622e",t:"📀狗男|气泡水@三水"},{id:"fb52feb5-de77-4152-ac79-f2efee1a6daf",t:"📀苦涩|苦杏仁@三水"},{id:"dc059498-1795-4ef2-a20a-31663d6f253c",t:"📀背德|金鱼灯@三水"}]},
@@ -166,7 +166,7 @@ const PANEL_DATA = {
   2: [
         {t:"哈基米破限",i:[{id:"61c5dabf-c028-4588-a243-83e3403ae029",t:"🔒Gemini防429|道歉可开"},{id:"eee9108c-1da7-495f-b7cf-346973296b0b",t:"🔒Gemini越狱2"},{id:"c29f5a23-5ead-4428-951a-508e40f8a20d",t:"🔒Gemini越狱1"},{id:"4e6b2ced-890b-46fb-a030-a773902a77e9",t:"🔒Gemini底部越狱2"},{id:"e2ef6bd1-4df5-46f4-9da9-8f34d3671d82",t:"🔒Gemini底部越狱1"},{id:"e2b6021c-cdbc-4ce7-9788-f4c73774b85c",t:"🔒Gemini底部越狱3"},{id:"7f764474-282b-401f-9765-ca794d6a8238",t:"🔗Gemini防空回"},{id:"ef8f4a17-af7b-490d-85d8-e54a1dfc0818",t:"🔗Gemini超强防截断"},{id:"61dd05b5-f310-4d84-8419-377214b8c4df",t:"🔗Gemini防止截断"}]},
         {t:"自选卡COT按钮",i:[{id:"ae9dd7aa-163c-44a3-af3a-96f23081f57d",t:"❄️3.1pro必开"},{id:"c8d921de-b2f0-4e1a-8226-ee4d1e686340",t:"❄️3.1pro必开"},{id:"cfa71971-5fb9-4d00-b2a7-5fa17e1c8566",t:"👑①3.7flash必开"},{id:"10c6c966-1d95-4501-9bde-45662a23dfc7",t:"👑②3.7flash必开"}]},
-        {t:"情感指导",i:[{id:"c1160d81-e5e6-4e8b-a405-108dc17f3b75",t:"✦✦友好世界✦✦"},{id:"15b6968a-a2a2-46e9-953c-4a13cf806e86",t:"└>🦋防止超雄绝望"}]},
+        {t:"情感指导",i:[{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"📦二选一|反霸总@人间月下"},{id:"af105e46-fa0d-4be4-aaee-bd15b2699b9a",t:"📦二选一|轻量反霸总@人间月下"},{id:"c1160d81-e5e6-4e8b-a405-108dc17f3b75",t:"✦✦友好世界✦✦"},{id:"15b6968a-a2a2-46e9-953c-4a13cf806e86",t:"└>🦋防止超雄绝望"}]},
         {t:"自检",i:[{id:"252ec317-ca51-4bcc-bd3d-9b0e5e167a4e",t:"˙⟡💭Gemini开启思维链₊˚⊹  "}]},
         {t:"行为规范",i:[{id:"23a2bd10-918d-4133-ace0-5bb15aeacbc4",t:"⚖️Gemini八股"},{id:"8f3fd14d-eace-4910-a748-b13a1be7b968",t:"🖊️防阴谋论"},{id:"85a64d71-8741-40bd-967b-5b7cec3c3df8",t:"📦减少反问"}]},
   ],
@@ -174,9 +174,29 @@ const PANEL_DATA = {
 
 // ── 一键开启互斥逻辑数据 ──
 const CLAUDE_SKIP_IDS = ["449877a9-d464-4562-a263-d28a2d5bbd8a","0956180f-b292-4e6e-a8c7-f6812338fab4","e5eee69f-916a-4d5b-9c80-611a09757799"];
-const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","b5890d19-f6ef-4880-84b1-71188652f982","15b6968a-a2a2-46e9-953c-4a13cf806e86","8f3fd14d-eace-4910-a748-b13a1be7b968","c1160d81-e5e6-4e8b-a405-108dc17f3b75","61dd05b5-f310-4d84-8419-377214b8c4df","61c5dabf-c028-4588-a243-83e3403ae029","7f764474-282b-401f-9765-ca794d6a8238","a7d5e545-a841-4b3f-8dc6-9f0061203035","85a64d71-8741-40bd-967b-5b7cec3c3df8","1b38dab4-de05-4f94-a2b9-9f950e651978","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d","cfa71971-5fb9-4d00-b2a7-5fa17e1c8566","10c6c966-1d95-4501-9bde-45662a23dfc7","ae9dd7aa-163c-44a3-af3a-96f23081f57d","c8d921de-b2f0-4e1a-8226-ee4d1e686340","c29f5a23-5ead-4428-951a-508e40f8a20d","e2ef6bd1-4df5-46f4-9da9-8f34d3671d82","e2b6021c-cdbc-4ce7-9788-f4c73774b85c","ef8f4a17-af7b-490d-85d8-e54a1dfc0818"];
+const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","b5890d19-f6ef-4880-84b1-71188652f982","15b6968a-a2a2-46e9-953c-4a13cf806e86","8f3fd14d-eace-4910-a748-b13a1be7b968","c1160d81-e5e6-4e8b-a405-108dc17f3b75","61dd05b5-f310-4d84-8419-377214b8c4df","61c5dabf-c028-4588-a243-83e3403ae029","7f764474-282b-401f-9765-ca794d6a8238","a7d5e545-a841-4b3f-8dc6-9f0061203035","85a64d71-8741-40bd-967b-5b7cec3c3df8","1b38dab4-de05-4f94-a2b9-9f950e651978","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d","cfa71971-5fb9-4d00-b2a7-5fa17e1c8566","10c6c966-1d95-4501-9bde-45662a23dfc7","ae9dd7aa-163c-44a3-af3a-96f23081f57d","c8d921de-b2f0-4e1a-8226-ee4d1e686340","c29f5a23-5ead-4428-951a-508e40f8a20d","e2ef6bd1-4df5-46f4-9da9-8f34d3671d82","e2b6021c-cdbc-4ce7-9788-f4c73774b85c","ef8f4a17-af7b-490d-85d8-e54a1dfc0818","593ffc8b-1cd0-4b3c-b754-6b99542a92b6"];
 const ALL_CLAUDE_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a","36b43d1c-2a82-42ae-80c2-49d13e56721b","e5eee69f-916a-4d5b-9c80-611a09757799"];
-const ALL_GEMINI_IDS = ["61c5dabf-c028-4588-a243-83e3403ae029","eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","7f764474-282b-401f-9765-ca794d6a8238","ae9dd7aa-163c-44a3-af3a-96f23081f57d","61dd05b5-f310-4d84-8419-377214b8c4df","c1160d81-e5e6-4e8b-a405-108dc17f3b75","15b6968a-a2a2-46e9-953c-4a13cf806e86","b5890d19-f6ef-4880-84b1-71188652f982","252ec317-ca51-4bcc-bd3d-9b0e5e167a4e","8c01ffc1-4839-48bb-aa8e-fd6e45822304","a7d5e545-a841-4b3f-8dc6-9f0061203035","23a2bd10-918d-4133-ace0-5bb15aeacbc4","8f3fd14d-eace-4910-a748-b13a1be7b968","85a64d71-8741-40bd-967b-5b7cec3c3df8","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d","c8d921de-b2f0-4e1a-8226-ee4d1e686340","1b38dab4-de05-4f94-a2b9-9f950e651978","cfa71971-5fb9-4d00-b2a7-5fa17e1c8566","10c6c966-1d95-4501-9bde-45662a23dfc7","c29f5a23-5ead-4428-951a-508e40f8a20d","e2ef6bd1-4df5-46f4-9da9-8f34d3671d82","e2b6021c-cdbc-4ce7-9788-f4c73774b85c","ef8f4a17-af7b-490d-85d8-e54a1dfc0818"];
+const ALL_GEMINI_IDS = ["61c5dabf-c028-4588-a243-83e3403ae029","eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","7f764474-282b-401f-9765-ca794d6a8238","ae9dd7aa-163c-44a3-af3a-96f23081f57d","61dd05b5-f310-4d84-8419-377214b8c4df","c1160d81-e5e6-4e8b-a405-108dc17f3b75","15b6968a-a2a2-46e9-953c-4a13cf806e86","b5890d19-f6ef-4880-84b1-71188652f982","252ec317-ca51-4bcc-bd3d-9b0e5e167a4e","8c01ffc1-4839-48bb-aa8e-fd6e45822304","a7d5e545-a841-4b3f-8dc6-9f0061203035","23a2bd10-918d-4133-ace0-5bb15aeacbc4","8f3fd14d-eace-4910-a748-b13a1be7b968","85a64d71-8741-40bd-967b-5b7cec3c3df8","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d","c8d921de-b2f0-4e1a-8226-ee4d1e686340","1b38dab4-de05-4f94-a2b9-9f950e651978","cfa71971-5fb9-4d00-b2a7-5fa17e1c8566","10c6c966-1d95-4501-9bde-45662a23dfc7","c29f5a23-5ead-4428-951a-508e40f8a20d","e2ef6bd1-4df5-46f4-9da9-8f34d3671d82","e2b6021c-cdbc-4ce7-9788-f4c73774b85c","ef8f4a17-af7b-490d-85d8-e54a1dfc0818","593ffc8b-1cd0-4b3c-b754-6b99542a92b6","af105e46-fa0d-4be4-aaee-bd15b2699b9a"];
+
+// 二选一互斥（开启一个关闭另一个）：涩个不停/不许涩了、反霸总/轻量反霸总
+const NSFW_TOGGLE_PAIR = {
+    'ef0aa97e-3eed-4e35-9d5f-aae6c7204fe1': '1712c368-5a56-41e6-bf8a-4af55d746564',
+    '1712c368-5a56-41e6-bf8a-4af55d746564': 'ef0aa97e-3eed-4e35-9d5f-aae6c7204fe1',
+    '593ffc8b-1cd0-4b3c-b754-6b99542a92b6': 'af105e46-fa0d-4be4-aaee-bd15b2699b9a',
+    'af105e46-fa0d-4be4-aaee-bd15b2699b9a': '593ffc8b-1cd0-4b3c-b754-6b99542a92b6',
+};
+
+// 反霸总二按钮与Claude分类全部按钮互斥
+const BAZONG_IDS = ["593ffc8b-1cd0-4b3c-b754-6b99542a92b6","af105e46-fa0d-4be4-aaee-bd15b2699b9a"];
+const CLAUDE_TAB_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","36b43d1c-2a82-42ae-80c2-49d13e56721b","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a","28355bda-9848-41a9-8deb-e443ee962f65","e5eee69f-916a-4d5b-9c80-611a09757799"];
+
+function isClaudeTabId(id) {
+    return CLAUDE_TAB_IDS.some(function(cid) { return resolveUid(cid) === id; });
+}
+
+function isBazongId(id) {
+    return BAZONG_IDS.some(function(bid) { return resolveUid(bid) === id; });
+}
 
 // NSFW互斥：防止发情开启时，关闭同组其他所有NSFW条目
 const NSFW_SUPPRESS_ID = 'caeb7072-ecbc-41f8-9c44-bb8f8144adae';
@@ -413,11 +433,11 @@ function syncAllOnButtons() {
     const geminiBtn = root.querySelector('#' + ROOT_ID + '-gemini-all-on');
     // 检查是否所有非跳过的Claude条目都开着
     if (claudeBtn) {
-        const allClaudeOn = ALL_CLAUDE_IDS.filter(id => !CLAUDE_SKIP_IDS.includes(id)).every(id => promptStateMap.get(id) === true);
+        const allClaudeOn = ALL_CLAUDE_IDS.filter(id => !CLAUDE_SKIP_IDS.includes(id)).every(id => promptStateMap.get(resolveUid(id)) === true);
         claudeBtn.classList.toggle('is-on', allClaudeOn);
     }
     if (geminiBtn) {
-        const allGeminiOn = ALL_GEMINI_IDS.filter(id => !GEMINI_SKIP_IDS.includes(id)).every(id => promptStateMap.get(id) === true);
+        const allGeminiOn = ALL_GEMINI_IDS.filter(id => !GEMINI_SKIP_IDS.includes(id)).every(id => promptStateMap.get(resolveUid(id)) === true);
         geminiBtn.classList.toggle('is-on', allGeminiOn);
     }
 }
@@ -457,6 +477,8 @@ function handleGeminiAllOn() {
         ALL_GEMINI_IDS.forEach(function(id) {
             if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(resolveUid(id), true);
         });
+        // 一键开启会启用轻量反霸总，此时强制关闭反霸总(重)保持二选一互斥
+        setPromptEnabled(resolveUid('593ffc8b-1cd0-4b3c-b754-6b99542a92b6'), false);
         // 关闭所有Claude
         ALL_CLAUDE_IDS.forEach(function(id) { setPromptEnabled(resolveUid(id), false); });
     } else {
@@ -621,6 +643,26 @@ function bindPanelEvents() {
             promptStateMap.set(pairId, false);
             var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + pairRaw + '"], .menu-item-toggle[data-identifier="' + pairId + '"]');
             if (pairBtn) pairBtn.classList.remove('is-on');
+        }
+        // 反霸总(任一)开启时，关闭Claude分类全部按钮
+        if (newEnabled && isBazongId(id)) {
+            CLAUDE_TAB_IDS.forEach(function(cid) {
+                const rcid = resolveUid(cid);
+                setPromptEnabled(rcid, false);
+                promptStateMap.set(rcid, false);
+                var cBtn = root.querySelector('.menu-item-toggle[data-identifier="' + cid + '"], .menu-item-toggle[data-identifier="' + rcid + '"]');
+                if (cBtn) cBtn.classList.remove('is-on');
+            });
+        }
+        // 开启Claude分类按钮时，关闭反霸总二按钮
+        if (newEnabled && isClaudeTabId(id)) {
+            BAZONG_IDS.forEach(function(bid) {
+                const rbid = resolveUid(bid);
+                setPromptEnabled(rbid, false);
+                promptStateMap.set(rbid, false);
+                var rBtn = root.querySelector('.menu-item-toggle[data-identifier="' + bid + '"], .menu-item-toggle[data-identifier="' + rbid + '"]');
+                if (rBtn) rBtn.classList.remove('is-on');
+            });
         }
         syncAllOnButtons();
     });

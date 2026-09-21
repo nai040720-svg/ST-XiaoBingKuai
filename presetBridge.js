@@ -51,6 +51,15 @@ export function getAllPromptStates() {
     }));
 }
 
+// ── 获取当前预设全部条目（含名称，保持预设内顺序）────────────
+export function getAllPromptEntries() {
+    const prompts = promptManager?.serviceSettings?.prompts;
+    if (!Array.isArray(prompts)) return [];
+    return prompts
+        .filter(p => p && p.identifier)
+        .map(p => ({ identifier: p.identifier, name: p.name || '' }));
+}
+
 // ── 通过名称模糊查找条目ID ──────────────────────────────────
 export function findIdentifierByName(name) {
     if (!promptManager?.serviceSettings?.prompts) return null;

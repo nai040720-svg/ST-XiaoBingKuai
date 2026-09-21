@@ -6,6 +6,7 @@
 
 import {
     getAllPromptStates,
+    getAllPromptEntries,
     onPromptStateChanged,
     togglePrompt,
     setPromptEnabled,
@@ -40,46 +41,77 @@ function resolveUid(id) {
     return resolved;
 }
 
-// 收集面板上所有按钮（含一键开启/互斥常量用到的UID）按名称重绑
-function rebuildUidMap() {
-    // 1. 收集面板所有按钮的 名称->旧UID
-    const nameToOldId = {};
-    const pattern = /\{id:"([0-9a-f-]+)",t:"((?:[^"\\]|\\.)*)"\}/g;
-    let m;
-    while ((m = pattern.exec(JSON.stringify(PANEL_DATA))) !== null) {
-        nameToOldId[m[2]] = m[1];
+// 按出现顺序收集面板全部按钮 {id, t}
+function collectPanelButtons() {
+    const out = [];
+    function walkGroups(groups) {
+        groups.forEach(function(g) {
+            if (g && Array.isArray(g.i)) g.i.forEach(function(b) { out.push(b); });
+            if (g && Array.isArray(g.n)) walkGroups(g.n);
+        });
     }
-    // 2. 遍历当前预设所有条目，按名称找到新UID
-    let updated = 0, unchanged = 0, missing = [];
-    const states = getAllPromptStates();
-    const presetEntries = (typeof promptManager !== 'undefined' && promptManager?.serviceSettings?.prompts) || [];
-    for (const p of presetEntries) {
-        if (!p || !p.name) continue;
-        const oldId = nameToOldId[p.name];
-        if (oldId && oldId !== p.identifier) {
-            uidMap[oldId] = p.identifier;
+    Object.keys(PANEL_DATA).forEach(function(k) { walkGroups(PANEL_DATA[k]); });
+    return out;
+}
+
+// 按名称收集预设条目UID（保持预设内顺序，重名有多个）
+function collectPresetByName() {
+    const entries = getAllPromptEntries();
+    const byName = new Map();
+    const ids = new Set();
+    entries.forEach(function(e) {
+        if (!e || !e.identifier) return;
+        ids.add(e.identifier);
+        const name = e.name;
+        if (!name) return;
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name).push(e.identifier);
+    });
+    return { byName: byName, ids: ids };
+}
+
+// 按名称重绑面板按钮UID（重名条目按出现顺序 1:1 配对）
+function rebuildUidMap() {
+    const preset = collectPresetByName();
+    const buttons = collectPanelButtons();
+    const nameSeen = new Map(); // 名称 -> 面板中已出现次数
+    let updated = 0, unchanged = 0;
+    const missing = [];
+
+    buttons.forEach(function(btn) {
+        const rawId = btn.id;
+        const name = btn.t;
+        const occ = nameSeen.get(name) || 0;
+        nameSeen.set(name, occ + 1);
+
+        // 当前绑定（可能已被映射过）是否依然有效
+        if (preset.ids.has(resolveUid(rawId))) { unchanged++; return; }
+
+        const cands = preset.byName.get(name);
+        if (!cands || !cands.length) { missing.push(name); return; }
+
+        // 重名条目：按出现顺序配对；越界则复用最后一个
+        const target = cands.length === 1 ? cands[0] : cands[Math.min(occ, cands.length - 1)];
+        if (uidMap[rawId] !== target) {
+            uidMap[rawId] = target;
             updated++;
-        } else if (oldId === p.identifier) {
+        } else {
             unchanged++;
         }
-    }
-    // 检查哪些面板按钮名称在当前预设中找不到
-    for (const [name, oldId] of Object.entries(nameToOldId)) {
-        if (resolveUid(oldId) === oldId && !presetEntries.some(p => p && p.name === name)) {
-            missing.push(name);
-        }
-    }
-    // 3. 持久化并刷新UI状态显示
+    });
+
+    // 持久化
     try { localStorage.setItem(STORAGE.uidMap, JSON.stringify(uidMap)); } catch (_) {}
-    // 4. 更新DOM按钮的data-identifier为解析后的新UID（只改绑定，不改开关状态）
+
+    // 只更新绑定，不改任何开关状态
     if (root) {
-        root.querySelectorAll('.menu-item-toggle[data-identifier]').forEach(function(btn) {
-            const old = btn.dataset.identifier;
+        root.querySelectorAll('.menu-item-toggle[data-identifier]').forEach(function(el) {
+            const old = el.dataset.identifier;
             const neo = resolveUid(old);
-            if (neo !== old) btn.dataset.identifier = neo;
+            if (neo !== old) el.dataset.identifier = neo;
         });
-        // 状态重新按新UID同步（读取当前实际开关状态，不会误改开关）
-        promptStateMap = new Map(states.map(function(item) { return [item.identifier, item.enabled]; }));
+        promptStateMap = new Map(getAllPromptStates().map(function(item) { return [item.identifier, item.enabled]; }));
+        cachedToggleButtonArray = null;
         syncButtonStates();
         syncAllOnButtons();
     }
@@ -89,10 +121,10 @@ function rebuildUidMap() {
 // ── 预设悬浮窗完整结构（275个条目，3个Tab分类） ──
 const PANEL_DATA = {
   0: [
-        {t:"写作设置",i:[{id:"88f13edf-e0fd-4e06-80ff-c13352a0c89e",t:"📦角色没有胡茬/薄茧"},{id:"ab161e33-aded-4b87-b5a5-5a69dc5ed29d",t:"📦防止夸张描写"},{id:"33083313-6d9d-456d-8229-fc2e601be087",t:"🖊️去除USER中心"},{id:"f00f7f5c-65cc-4427-81b5-f04cfae1c57e",t:"🖊️请去工作/上学"},{id:"f86656e0-8f29-44ff-b231-2405282858b7",t:"🖊️不要总吃饭补充包"},{id:"abfbfabe-ae03-404d-94da-7fb6d0ddffd7",t:"⚖️反复读"},{id:"99255a68-65f7-407a-bbb2-8134443d2323",t:"✧─🆔反人机语言─✧"},{id:"824c48a5-1732-448e-b367-46ec6464fc12",t:"🖊️角色信息差"},{id:"7b1cf0df-71a2-47de-8c6b-abee9ab1e1d1",t:"🖊️防全知"},{id:"78efd275-b3fd-4c72-a5ca-d071a0094233",t:"🖊️不要拆解动作"}],n:[
+        {t:"写作设置",i:[{id:"88f13edf-e0fd-4e06-80ff-c13352a0c89e",t:"📦角色没有胡茬/薄茧"},{id:"ab161e33-aded-4b87-b5a5-5a69dc5ed29d",t:"📦防止夸张描写"},{id:"33083313-6d9d-456d-8229-fc2e601be087",t:"🖊️去除USER中心"},{id:"f00f7f5c-65cc-4427-81b5-f04cfae1c57e",t:"🖊️请去工作/上学"},{id:"f86656e0-8f29-44ff-b231-2405282858b7",t:"🖊️不要总吃饭补充包"},{id:"abfbfabe-ae03-404d-94da-7fb6d0ddffd7",t:"⚖️反复读"},{id:"99255a68-65f7-407a-bbb2-8134443d2323",t:"✧─🆔反人机语言─✧"},{id:"7b1cf0df-71a2-47de-8c6b-abee9ab1e1d1",t:"🖊️防全知"},{id:"78efd275-b3fd-4c72-a5ca-d071a0094233",t:"🖊️不要拆解动作"}],n:[
             {t:"去八股",i:[{id:"0e987dc8-43cc-4c00-954f-ffc67c384b6f",t:"✏️二选一|字数检测"},{id:"9ca01a33-a015-4647-86f1-b34edb73807c",t:"˙⟡🔔二选一|自检草稿₊˚⊹"},{id:"6fe81f7c-ff18-415d-8e98-46d8a4a1949f",t:"˙⟡🔔草稿格式增强₊˚⊹"},{id:"9cb5b815-302b-4c35-a947-7382f011e964",t:"˙⟡🌼防重复全部正文₊˚⊹  "},{id:"be1d1013-bb94-45d7-90ec-2faacc0f512d",t:"⚖️限制Ai腔"},{id:"3a351be1-f1eb-4aa8-b28d-02f7395d66f1",t:"⚖️修喻法则"},{id:"044e1f2e-c14f-4481-9581-8566499eb7bc",t:"⚖️反转折词"},{id:"76c7e5d9-cd02-4c14-9628-07c7767c31ca",t:"⚖️防解释补充包"},{id:"2a020bf1-a433-4005-b1a1-8b1f6061ba27",t:"⚖️去破折号 符号净化"},{id:"1b38dab4-de05-4f94-a2b9-9f950e651978",t:"📦禁止医学词"}]},
             {t:"user设定",i:[{id:"a7d5e545-a841-4b3f-8dc6-9f0061203035",t:"🎀༘防弱化USER"},{id:"e9890783-56ef-4a30-b29b-4ae967104b23",t:"🎀༘不许给USER取外号"},{id:"c2110981-b605-4343-a602-bf2b98141cf2",t:"🎀༘禁止瞎编USER"},{id:"e4969090-d4a3-463d-bffa-5fd10355b6de",t:"📦日常情趣服装"}]},
-            {t:"char角色设定",i:[{id:"8c01ffc1-4839-48bb-aa8e-fd6e45822304",t:"🦋防照搬人设补充包"},{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"🦋反瞎编CHAR设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"📦拒绝穷人"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"📦减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"🌐群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"🌐反回忆杀"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"📦你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"📦食物补充包"},{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"📦二选一|反霸总@人间月下"},{id:"af105e46-fa0d-4be4-aaee-bd15b2699b9a",t:"📦二选一|轻量反霸总@人间月下"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"└>🦋防照搬人设"},{id:"d01005d0-79b1-4076-b793-9a24407e22a2",t:"📦不许收利息"},{id:"d5441e81-f1ab-4d81-a7c0-af45b334ce73",t:"📦去除“儿”化音"}]},
+            {t:"char角色设定",i:[{id:"8c01ffc1-4839-48bb-aa8e-fd6e45822304",t:"🦋加强防照搬人设"},{id:"cd80d0c3-5c67-444e-ac34-a08c9fc5f1a8",t:"🦋反瞎编CHAR设定"},{id:"017e1f84-e57e-4b67-bc86-f6a64fd24023",t:"📦拒绝穷人"},{id:"c205abe5-0929-4a6a-a88d-3e2ba3d7210a",t:"📦减少角色口癖"},{id:"1cff76c2-0c40-4fef-a8ca-915f2f1f515f",t:"🌐群像NPC"},{id:"4d8e538e-153a-41cb-a195-b0a7fdbfc65b",t:"🌐反回忆杀"},{id:"00227034-8fb6-427e-840a-764a4cf6fd04",t:"📦你要做爱干净的银"},{id:"582327a0-b9d4-4b44-a47f-942414745259",t:"📦食物补充包"},{id:"593ffc8b-1cd0-4b3c-b754-6b99542a92b6",t:"📦二选一|反霸总@人间月下"},{id:"af105e46-fa0d-4be4-aaee-bd15b2699b9a",t:"📦二选一|轻量反霸总@人间月下"},{id:"3ae9abd2-5ef9-4c2c-b77c-69a687ff5a55",t:"└>🦋防照搬人设"},{id:"d01005d0-79b1-4076-b793-9a24407e22a2",t:"📦不许收利息"},{id:"d5441e81-f1ab-4d81-a7c0-af45b334ce73",t:"📦去除“儿”化音"}]},
             {t:"思维链",i:[{id:"2eff07e7-1abe-49a7-a2db-f4ec231fcd73",t:"🐾线上模式"},{id:"7d58874d-319c-487c-8c0b-320254c570ff",t:"🐾同人确认"},{id:"01340fe6-8194-4895-902a-6897a75d0a98",t:"🐾衣物确认"},{id:"da0e5a25-2534-42e4-bdd3-a8208c57ccdf",t:"🐾NPC群像"},{id:"810a42b0-e6ad-4e2e-a599-7d216d28d17a",t:"🐾人设自检纠错"},{id:"d7900223-6def-43d9-b7dd-e6adb2bacffd",t:"🐾捏USER人设模式|推荐Claude"}]},
         ]},
         {t:"情感指导",n:[
@@ -110,7 +142,7 @@ const PANEL_DATA = {
             {t:"NSFW文风@陆子慕",i:[{id:"24c4a4ef-6552-49af-abce-ba74c9925504",t:"♥︎ 意识流情色"},{id:"45bf03a9-0e7f-4c01-983c-e6c7e29ccd67",t:"♥︎ 激烈性爱"},{id:"ca0d5a93-e998-41d3-a69e-7ff0d4dd9370",t:"♥︎ 粗口性爱"},{id:"51d9ccdd-1ecf-45fb-94a9-9348b19d2b1b",t:"♥︎ 温柔诱导"},{id:"3231cb1a-d428-4f27-9233-f474da1783ce",t:"♥︎ 激情做恨"},{id:"6edb4d68-95d7-4196-b226-b0ff51a01321",t:"♥︎ 糙汉宠文"},{id:"6f5a397f-a5fc-446c-80b6-3bf6b1f7cb35",t:"♥︎以下犯上"},{id:"916d0571-c525-466a-94b0-16f524d2829c",t:"♥︎沉默猛干"},{id:"b9b830fe-2b20-4394-abdc-e4d118260e04",t:"♥︎床上挑衅"},{id:"258dafb2-f189-42f9-9a22-6cdd861d0948",t:"♥︎ BDSM 冷酷掌控"},{id:"d39af1d8-32bf-40cd-b47d-7af3842d6f80",t:"♥︎ 极简训犬"},{id:"eb4285d1-39eb-4ed8-be26-0be8adfeaa9d",t:"♥︎ 24/7宠物"},{id:"34270d1b-aa4e-4614-a98b-a2d487ccdd22",t:"♥︎ 斯文败类"},{id:"fa5e128e-ccfd-40ce-a093-3eb8b216f3a8",t:"♥︎ 病态圈养"},{id:"ac9a7651-d854-4427-b302-d2bfb5fcb264",t:"♥︎ 病态依恋"},{id:"17176439-99ea-4434-83d7-060383a20ecb",t:"♥︎ 虔诚朝圣"}]},
             {t:"自定义文风",i:[{id:"81ac8a58-2ee1-41d6-b2dd-dc4dc3a7194d",t:"🎵文风留给你缝#1"},{id:"c3bf07aa-8daf-4c5d-87ab-84e0ff7014d0",t:"🎵文风留给你缝#2"},{id:"adac134c-bcff-4bac-b150-2f1c81e50233",t:"🎵文风留给你缝#3"},{id:"8fd9b09c-d3d2-4ced-b719-0ffe83b0be78",t:"🎵文风留给你缝#4"}]}
         ]},
-        {t:"NSFW",i:[{id:"43f2c0f5-2b2d-48d1-8acb-dc7a0a39bc6a",t:"🔞一键开启瑟瑟🔞↑ "},{id:"ef0aa97e-3eed-4e35-9d5f-aae6c7204fe1",t:"💕涩个不停"},{id:"1712c368-5a56-41e6-bf8a-4af55d746564",t:"💕不许涩了"},{id:"c85c7498-2c03-4362-a42f-27d580b79d7c",t:"🔞NSFW|走🚗开"},{id:"caeb7072-ecbc-41f8-9c44-bb8f8144adae",t:"🍪防止发情"},{id:"16578df1-bbc5-4b91-ad63-43e0afa0ef66",t:"💕性爱词汇"},{id:"f1518297-09c4-4525-90bf-57f8cac22ed3",t:"💕多人拒绝修罗场"},{id:"8fea0443-3261-4b64-b97d-d14a6a7580d9",t:"💕防过于尊重"},{id:"afe37b3a-5425-4245-82cb-b00626fe4f7a",t:"💕麽u性爱"},{id:"d632d197-d7f0-4394-8d56-5f4977553193",t:"💕去除刻板化"},{id:"a054e69a-a003-4edb-b864-5c3eaa0b1f65",t:"💕亲亲嘴"},{id:"80267a45-c682-47da-a6db-42e0d100eed0",t:"💕射精描写"},{id:"908e1ac7-0109-4285-be74-d2d26cc61084",t:"💕BG-BL素股"},{id:"2a0269c0-ec24-4ffc-b65b-9c2cc1229e9b",t:"💕平等涩涩"},{id:"44497e10-9bd1-4c45-889d-3b61c30ed397",t:"💕粗俗瑟瑟"},{id:"e2bdb2a8-3da5-4521-a5c7-acf768fd2ea7",t:"💕背德/不平等"},{id:"8f1bd137-1f5c-4d99-b74a-98b3f14bc1e1",t:"💕Dirt talk蜜语"},{id:"15f9bd3f-6113-4172-9fa6-2d019dad8e48",t:"💕淫水刻画(女)"},{id:"4b97f561-261d-4494-a7c6-1b62303d67d6",t:"💕淫水刻画(双性)"},{id:"5d2b0492-3768-4157-abb9-86397118ec3a",t:"💕多角色性爱"},{id:"14a7b0c1-60f7-4144-bd2c-352ef484c474",t:"💕防夸大/重喘息"},{id:"cd04bbfb-9487-4ef8-b984-0d3e89b42045",t:"💕聚焦男喘"}],n:[
+        {t:"NSFW",i:[{id:"43f2c0f5-2b2d-48d1-8acb-dc7a0a39bc6a",t:"🔞一键开启瑟瑟🔞↑ "},{id:"ef0aa97e-3eed-4e35-9d5f-aae6c7204fe1",t:"💕涩个不停|防秒射"},{id:"1712c368-5a56-41e6-bf8a-4af55d746564",t:"💕不许涩了"},{id:"c85c7498-2c03-4362-a42f-27d580b79d7c",t:"🔞NSFW|走🚗开"},{id:"caeb7072-ecbc-41f8-9c44-bb8f8144adae",t:"🍪防止发情"},{id:"16578df1-bbc5-4b91-ad63-43e0afa0ef66",t:"💕直白性爱词汇"},{id:"f1518297-09c4-4525-90bf-57f8cac22ed3",t:"💕多人拒绝修罗场"},{id:"8fea0443-3261-4b64-b97d-d14a6a7580d9",t:"💕防过于尊重"},{id:"afe37b3a-5425-4245-82cb-b00626fe4f7a",t:"💕麽u性爱"},{id:"d632d197-d7f0-4394-8d56-5f4977553193",t:"💕去除刻板化"},{id:"a054e69a-a003-4edb-b864-5c3eaa0b1f65",t:"💕亲亲嘴"},{id:"80267a45-c682-47da-a6db-42e0d100eed0",t:"💕射精描写"},{id:"908e1ac7-0109-4285-be74-d2d26cc61084",t:"💕BG-BL素股"},{id:"2a0269c0-ec24-4ffc-b65b-9c2cc1229e9b",t:"💕平等涩涩"},{id:"44497e10-9bd1-4c45-889d-3b61c30ed397",t:"💕粗俗瑟瑟"},{id:"e2bdb2a8-3da5-4521-a5c7-acf768fd2ea7",t:"💕背德/不平等"},{id:"8f1bd137-1f5c-4d99-b74a-98b3f14bc1e1",t:"💕Dirt talk蜜语"},{id:"15f9bd3f-6113-4172-9fa6-2d019dad8e48",t:"💕淫水刻画(女)"},{id:"4b97f561-261d-4494-a7c6-1b62303d67d6",t:"💕淫水刻画(双性)"},{id:"5d2b0492-3768-4157-abb9-86397118ec3a",t:"💕多角色性爱"},{id:"14a7b0c1-60f7-4144-bd2c-352ef484c474",t:"💕防夸大/重喘息"},{id:"cd04bbfb-9487-4ef8-b984-0d3e89b42045",t:"💕聚焦男喘"}],n:[
             {t:"NSFW玩法",i:[{id:"5885d2be-1c87-4506-97ad-3179d6d7f661",t:"💕通用性爱玩法"},{id:"9de31d39-0486-4e26-961a-3c1a7a8e3d51",t:"💕爱抚"},{id:"3ac84212-0653-4617-be8e-b09b9f9d6338",t:"💕女u通用Play"},{id:"12aa0943-f034-44e5-8a9d-c5b3ebf4b490",t:"💕DS随机玩法生成器"},{id:"a00370f3-0108-4f0a-8452-abad70d4e42c",t:"💕情趣衣玩法"},{id:"65bdaaa9-79a1-44b3-afc9-4f2bb65759d6",t:"💕道具Play"},{id:"29a95af4-11cc-48de-91ea-f035e28d1f12",t:"💕公开play"},{id:"a4ae4fc9-7d47-4a4d-a2ac-3f9f5f271b09",t:"💕其他play"},{id:"0a4e15b7-40ed-4260-834c-e06b70558e10",t:"💕乳交玩法"},{id:"e5364f02-c6f8-4494-b419-a3463cd882d3",t:"💕憋尿玩法"}]},
             {t:"特化",i:[{id:"0b8b590e-57db-416e-999f-89add143c818",t:"💕体型差"},{id:"3ea350ce-4107-46d9-b280-bf548162a135",t:"💕熟女特化"},{id:"3aa26b1b-ed87-4cfd-8ea2-22c3e6f86c2d",t:"💕孕期特化"},{id:"44f10d57-a3a4-44a0-8d02-4b9deb3f1eeb",t:"💕c是男妈妈🍼"},{id:"9e8895c4-533b-4ff3-b55c-e641f612de58",t:"💕小女孩特化"},{id:"ab1c0395-21b9-4bd5-a7d8-0ee7ef9eeab7",t:"💕青少女特化"},{id:"c4018614-f345-4b79-a379-4a5f27ae34bb",t:"💕双性男特化"}]},
             {t:"BL",i:[{id:"e4ca443b-6d6d-48f3-b555-d75bbe72dbee",t:"💕BL涩涩"},{id:"04dc82a8-fe25-4548-ad8e-c39c6f002d4a",t:"💕小男孩特化"},{id:"075abfc8-b1d1-448b-b467-6ead207f17fd",t:"💕u纤细男特化"},{id:"3b13929c-817f-4c41-a36c-d89aeb1d6a03",t:"💕u壮男受特化"}]},
@@ -128,7 +160,7 @@ const PANEL_DATA = {
   ],
   1: [
         {t:"破限与释放",i:[{id:"0956180f-b292-4e6e-a8c7-f6812338fab4",t:"🔒Claude头部|道歉在开4.8别开"},{id:"36b43d1c-2a82-42ae-80c2-49d13e56721b",t:"🗝️Claude底部必开卡COT"}]},
-        {t:"思维与自检",i:[{id:"449877a9-d464-4562-a263-d28a2d5bbd8a",t:"🐾暗黑森林|Claude烂人OOC使用"},{id:"0da57f41-dc6e-4f57-81c1-6ed2f63c4b32",t:"🐾Claude自由意志"},{id:"84c4bc39-2435-4ac7-af72-860e42bd1059",t:"🫶Claude自由意志"},{id:"91465da7-d4fd-4e8e-86c7-db98de4c9a9a",t:"˙⟡💭Claude开启思维链₊˚⊹  "},{id:"28355bda-9848-41a9-8deb-e443ee962f65",t:"⚖️Claude描写改写"}]},
+        {t:"思维与自检",i:[{id:"449877a9-d464-4562-a263-d28a2d5bbd8a",t:"🐾暗黑森林|Claude烂人OOC使用"},{id:"0da57f41-dc6e-4f57-81c1-6ed2f63c4b32",t:"🐾增加阴暗|Claude自由意志"},{id:"84c4bc39-2435-4ac7-af72-860e42bd1059",t:"🫶Claude自由意志"},{id:"91465da7-d4fd-4e8e-86c7-db98de4c9a9a",t:"˙⟡💭Claude开启思维链₊˚⊹  "},{id:"28355bda-9848-41a9-8deb-e443ee962f65",t:"⚖️Claude描写改写"}]},
         {t:"小克情感加浓",i:[{id:"e5eee69f-916a-4d5b-9c80-611a09757799",t:"💟Gemini可不开|加强白给/浓度"}]},
   ],
   2: [
@@ -241,7 +273,7 @@ function createPanel() {
                     '<svg viewBox="0 0 48 48" width="16" height="16">' +
                         '<text x="24" y="37" text-anchor="middle" font-size="36" fill="#e8976a">❄️</text>' +
                     '</svg>' +
-                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.83</div></div>' +
+                    '<div class="menu-title-wrap"><div class="menu-title">小冰块❄️V3.84</div></div>' +
                     '<button class="menu-refresh" id="' + ROOT_ID + '-refresh" title="重新绑定最新预设UID（不影响开关状态）">⟳</button>' +
                     '<button class="menu-close" id="' + ROOT_ID + '-close">✕</button>' +
                 '</div>' +
@@ -252,7 +284,7 @@ function createPanel() {
                 '</div>' +
                 '<div class="menu-list" id="' + ROOT_ID + '-list"></div>' +
                 '<div class="menu-foot">' +
-                    '<span>小冰块❄️V3.83</span>' +
+                    '<span>小冰块❄️V3.84</span>' +
                     '<span class="fox-link">[ ɪᴄᴇ//ᴄᴜʙᴇ ]</span>' +
                 '</div>' +
             '</div>' +
@@ -457,7 +489,7 @@ function syncButtonStates() {
     }
     for (let i = 0; i < cachedToggleButtonArray.length; i++) {
         const btn = cachedToggleButtonArray[i];
-        const id = btn.dataset.identifier;
+        const id = resolveUid(btn.dataset.identifier);
         const on = promptStateMap.has(id) ? promptStateMap.get(id) : false;
         if (on) btn.classList.add('is-on');
         else btn.classList.remove('is-on');
@@ -484,7 +516,7 @@ function mountSettingsPanel() {
     panel.className = 'xbk-settings-block inline-drawer';
     panel.innerHTML =
         '<div class="inline-drawer-toggle inline-drawer-header xbk-drawer-header">' +
-            '<b>❄️ 小冰块❄️V3.83</b>' +
+            '<b>❄️ 小冰块❄️V3.84</b>' +
             '<div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>' +
         '</div>' +
         '<div class="inline-drawer-content" style="display:none;">' +
@@ -523,7 +555,7 @@ function bindPanelEvents() {
             try {
                 const r = rebuildUidMap();
                 if (window.toastr?.success) {
-                    window.toastr.success('UID重新绑定完成：更新 ' + r.updated + ' 个，未变 ' + r.unchanged + ' 个' + (r.missing.length ? '，未找到 ' + r.missing.length + ' 个条目' : ''), '小冰块❄️V3.83');
+                    window.toastr.success('UID重新绑定完成：更新 ' + r.updated + ' 个，未变 ' + r.unchanged + ' 个' + (r.missing.length ? '，未找到 ' + r.missing.length + ' 个条目' : ''), '小冰块❄️V3.84');
                 }
             } catch (err) {
                 if (window.toastr?.error) window.toastr.error('UID重绑失败: ' + (err && err.message || err));
@@ -570,10 +602,10 @@ function bindPanelEvents() {
         var newEnabled = btn.classList.contains('is-on');
         promptStateMap.set(id, newEnabled);
         // nsfw-suppress互斥：防止发情开启时，关闭同组其他所有NSFW条目
-        if (id === NSFW_SUPPRESS_ID && newEnabled) {
+        if (id === resolveUid(NSFW_SUPPRESS_ID) && newEnabled) {
             NSFW_SECTION_IDS.forEach(function(nsid) {
                 const rsid = resolveUid(nsid);
-                if (rsid !== NSFW_SUPPRESS_ID) {
+                if (rsid !== resolveUid(NSFW_SUPPRESS_ID)) {
                     setPromptEnabled(rsid, false);
                     promptStateMap.set(rsid, false);
                     var nsfwBtn = root.querySelector('.menu-item-toggle[data-identifier="' + nsid + '"], .menu-item-toggle[data-identifier="' + rsid + '"]');
@@ -582,11 +614,12 @@ function bindPanelEvents() {
             });
         }
         // 涩个不停/不许涩了互斥：开启一个时关闭另一个
-        if (newEnabled && NSFW_TOGGLE_PAIR[id]) {
-            var pairId = resolveUid(NSFW_TOGGLE_PAIR[id]);
+        var pairRaw = NSFW_TOGGLE_PAIR[id] || NSFW_TOGGLE_PAIR[rawId];
+        if (newEnabled && pairRaw) {
+            var pairId = resolveUid(pairRaw);
             setPromptEnabled(pairId, false);
             promptStateMap.set(pairId, false);
-            var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + NSFW_TOGGLE_PAIR[id] + '"], .menu-item-toggle[data-identifier="' + pairId + '"]');
+            var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + pairRaw + '"], .menu-item-toggle[data-identifier="' + pairId + '"]');
             if (pairBtn) pairBtn.classList.remove('is-on');
         }
         syncAllOnButtons();

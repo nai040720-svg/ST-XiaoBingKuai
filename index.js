@@ -178,25 +178,11 @@ const GEMINI_SKIP_IDS = ["eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-4
 const ALL_CLAUDE_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a","36b43d1c-2a82-42ae-80c2-49d13e56721b","e5eee69f-916a-4d5b-9c80-611a09757799","28355bda-9848-41a9-8deb-e443ee962f65"];
 const ALL_GEMINI_IDS = ["61c5dabf-c028-4588-a243-83e3403ae029","eee9108c-1da7-495f-b7cf-346973296b0b","4e6b2ced-890b-46fb-a030-a773902a77e9","7f764474-282b-401f-9765-ca794d6a8238","ae9dd7aa-163c-44a3-af3a-96f23081f57d","61dd05b5-f310-4d84-8419-377214b8c4df","c1160d81-e5e6-4e8b-a405-108dc17f3b75","15b6968a-a2a2-46e9-953c-4a13cf806e86","b5890d19-f6ef-4880-84b1-71188652f982","252ec317-ca51-4bcc-bd3d-9b0e5e167a4e","8c01ffc1-4839-48bb-aa8e-fd6e45822304","a7d5e545-a841-4b3f-8dc6-9f0061203035","23a2bd10-918d-4133-ace0-5bb15aeacbc4","8f3fd14d-eace-4910-a748-b13a1be7b968","85a64d71-8741-40bd-967b-5b7cec3c3df8","88f13edf-e0fd-4e06-80ff-c13352a0c89e","e9890783-56ef-4a30-b29b-4ae967104b23","ab161e33-aded-4b87-b5a5-5a69dc5ed29d","c8d921de-b2f0-4e1a-8226-ee4d1e686340","1b38dab4-de05-4f94-a2b9-9f950e651978","cfa71971-5fb9-4d00-b2a7-5fa17e1c8566","10c6c966-1d95-4501-9bde-45662a23dfc7","c29f5a23-5ead-4428-951a-508e40f8a20d","e2ef6bd1-4df5-46f4-9da9-8f34d3671d82","e2b6021c-cdbc-4ce7-9788-f4c73774b85c","ef8f4a17-af7b-490d-85d8-e54a1dfc0818","593ffc8b-1cd0-4b3c-b754-6b99542a92b6","af105e46-fa0d-4be4-aaee-bd15b2699b9a"];
 
-// 二选一互斥（开启一个关闭另一个）：涩个不停/不许涩了、反霸总/轻量反霸总
+// 二选一互斥（开启一个关闭另一个）：涩个不停/不许涩了
 const NSFW_TOGGLE_PAIR = {
     'ef0aa97e-3eed-4e35-9d5f-aae6c7204fe1': '1712c368-5a56-41e6-bf8a-4af55d746564',
     '1712c368-5a56-41e6-bf8a-4af55d746564': 'ef0aa97e-3eed-4e35-9d5f-aae6c7204fe1',
-    '593ffc8b-1cd0-4b3c-b754-6b99542a92b6': 'af105e46-fa0d-4be4-aaee-bd15b2699b9a',
-    'af105e46-fa0d-4be4-aaee-bd15b2699b9a': '593ffc8b-1cd0-4b3c-b754-6b99542a92b6',
 };
-
-// 反霸总二按钮与Claude分类全部按钮互斥
-const BAZONG_IDS = ["593ffc8b-1cd0-4b3c-b754-6b99542a92b6","af105e46-fa0d-4be4-aaee-bd15b2699b9a"];
-const CLAUDE_TAB_IDS = ["0956180f-b292-4e6e-a8c7-f6812338fab4","36b43d1c-2a82-42ae-80c2-49d13e56721b","449877a9-d464-4562-a263-d28a2d5bbd8a","0da57f41-dc6e-4f57-81c1-6ed2f63c4b32","84c4bc39-2435-4ac7-af72-860e42bd1059","91465da7-d4fd-4e8e-86c7-db98de4c9a9a","28355bda-9848-41a9-8deb-e443ee962f65","e5eee69f-916a-4d5b-9c80-611a09757799"];
-
-function isClaudeTabId(id) {
-    return CLAUDE_TAB_IDS.some(function(cid) { return resolveUid(cid) === id; });
-}
-
-function isBazongId(id) {
-    return BAZONG_IDS.some(function(bid) { return resolveUid(bid) === id; });
-}
 
 // NSFW互斥：防止发情开启时，关闭同组其他所有NSFW条目
 const NSFW_SUPPRESS_ID = 'caeb7072-ecbc-41f8-9c44-bb8f8144adae';
@@ -471,8 +457,6 @@ function handleGeminiAllOn() {
         ALL_GEMINI_IDS.forEach(function(id) {
             if (!GEMINI_SKIP_IDS.includes(id)) setPromptEnabled(resolveUid(id), true);
         });
-        // 一键开启会启用轻量反霸总，此时强制关闭反霸总(重)保持二选一互斥
-        setPromptEnabled(resolveUid('593ffc8b-1cd0-4b3c-b754-6b99542a92b6'), false);
         // 关闭所有Claude
         ALL_CLAUDE_IDS.forEach(function(id) { setPromptEnabled(resolveUid(id), false); });
     } else {
@@ -629,36 +613,16 @@ function bindPanelEvents() {
                 }
             });
         }
-        // 涩个不停/不许涩了互斥：开启一个时关闭另一个
-        var pairRaw = NSFW_TOGGLE_PAIR[id] || NSFW_TOGGLE_PAIR[rawId];
-        if (newEnabled && pairRaw) {
-            var pairId = resolveUid(pairRaw);
-            setPromptEnabled(pairId, false);
-            promptStateMap.set(pairId, false);
-            var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + pairRaw + '"], .menu-item-toggle[data-identifier="' + pairId + '"]');
-            if (pairBtn) pairBtn.classList.remove('is-on');
-        }
-        // 反霸总(任一)开启时，关闭Claude分类全部按钮
-        if (newEnabled && isBazongId(id)) {
-            CLAUDE_TAB_IDS.forEach(function(cid) {
-                const rcid = resolveUid(cid);
-                setPromptEnabled(rcid, false);
-                promptStateMap.set(rcid, false);
-                var cBtn = root.querySelector('.menu-item-toggle[data-identifier="' + cid + '"], .menu-item-toggle[data-identifier="' + rcid + '"]');
-                if (cBtn) cBtn.classList.remove('is-on');
-            });
-        }
-        // 开启Claude分类按钮时，关闭反霸总二按钮
-        if (newEnabled && isClaudeTabId(id)) {
-            BAZONG_IDS.forEach(function(bid) {
-                const rbid = resolveUid(bid);
-                setPromptEnabled(rbid, false);
-                promptStateMap.set(rbid, false);
-                var rBtn = root.querySelector('.menu-item-toggle[data-identifier="' + bid + '"], .menu-item-toggle[data-identifier="' + rbid + '"]');
-                if (rBtn) rBtn.classList.remove('is-on');
-            });
-        }
-        syncAllOnButtons();
+         // 涩个不停/不许涩了互斥：开启一个时关闭另一个
+         var pairRaw = NSFW_TOGGLE_PAIR[id] || NSFW_TOGGLE_PAIR[rawId];
+         if (newEnabled && pairRaw) {
+             var pairId = resolveUid(pairRaw);
+             setPromptEnabled(pairId, false);
+             promptStateMap.set(pairId, false);
+             var pairBtn = root.querySelector('.menu-item-toggle[data-identifier="' + pairRaw + '"], .menu-item-toggle[data-identifier="' + pairId + '"]');
+             if (pairBtn) pairBtn.classList.remove('is-on');
+         }
+         syncAllOnButtons();
     });
 }
 
